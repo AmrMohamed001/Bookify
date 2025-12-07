@@ -1,0 +1,22 @@
+{
+  "name": "bookify",
+  "version": "1.0.0",
+  "description": "Bookify is a modern e-book subscription and marketplace backend built with Node.js and Express. It provides APIs for user authentication, book management, subscriptions, payments, and author dashboards—perfect for building digital reading platforms and scalable content services.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "nodemon src/server.js",
+    "start:prod": "cross-env NODE_ENV=production nodemon src/server.js"
+  },
+  "author": "3mrr",
+  "license": "ISC",
+  "dependencies": {
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mongoose": "^9.0.1",
+    "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
