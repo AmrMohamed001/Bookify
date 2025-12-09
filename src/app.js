@@ -1,6 +1,8 @@
 const express = require('express')
 const morgan = require('morgan')
 const app = express();
+const AppError = require('./utils/AppError')
+const globalErrorHandlingMiddleware = require('./middlewares/globalErrorHandlingMiddleware')
 /////////////////////////////////////////////////////////////////
 const categoryRouter = require('./routes/categoryRoute')
 /////////////////////////////////////////////////////////////////
@@ -12,8 +14,13 @@ app.use((req, res, next) => {
     req.requestTime = new Date().toISOString();
     next();
 });
-app.use('/',(req,res)=>res.status(200).json({message:"Welcome to Bookify server" , timeCost:req.requestTime}))
+app.get('/',(req,res)=>res.status(200).json({message:"Welcome to Bookify server" , timeCost:req.requestTime}))
 /////////////////////////////////////////////////////////////////
 // MOUNTING
 app.use('/api/v1/categories',categoryRouter)
+
+app.all('/*splat',(req, res, next)=>{
+    return next(new AppError(400 , `Can't find this route: ${req.originalUrl}`,400))
+})
+app.use(globalErrorHandlingMiddleware)
 module.exports = app;
