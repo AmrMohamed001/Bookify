@@ -40,5 +40,4 @@ schema.pre('findOneAndUpdate', function (next) {
     update.slug = slugify(update.name, { lower: true });
   }
 });
-
 module.exports = mongoose.model('Category', schema);

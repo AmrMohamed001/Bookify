@@ -1,0 +1,253 @@
+doctype html
+html
+  head
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    meta(http-equiv='Content-Type' content='text/html; charset=UTF-8')
+    title= subject
+    style.
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background-color: #f5f5f5;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 30px;
+        text-align: center;
+      }
+      
+      .logo {
+        font-size: 32px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+      }
+      
+      .logo-icon {
+        display: inline-block;
+        margin-right: 8px;
+      }
+      
+      .header-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+        font-weight: 400;
+      }
+      
+      .content {
+        padding: 40px 30px;
+      }
+      
+      .greeting {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 20px;
+      }
+      
+      .message {
+        font-size: 16px;
+        color: #4a5568;
+        margin-bottom: 30px;
+        line-height: 1.8;
+      }
+      
+      .cta-button {
+        display: inline-block;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+      
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+      }
+      
+      .features {
+        margin: 40px 0;
+        padding: 30px;
+        background-color: #f7fafc;
+        border-radius: 8px;
+      }
+      
+      .features-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      
+      .feature-list {
+        list-style: none;
+      }
+      
+      .feature-item {
+        padding: 12px 0;
+        color: #4a5568;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .feature-icon {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        margin-right: 12px;
+        flex-shrink: 0;
+        position: relative;
+      }
+      
+      .feature-icon::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      
+      .footer {
+        padding: 30px;
+        background-color: #f7fafc;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+      }
+      
+      .footer-text {
+        font-size: 14px;
+        color: #718096;
+        margin-bottom: 10px;
+      }
+      
+      .social-links {
+        margin-top: 20px;
+      }
+      
+      .social-link {
+        display: inline-block;
+        margin: 0 10px;
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      
+      .divider {
+        height: 1px;
+        background-color: #e2e8f0;
+        margin: 30px 0;
+      }
+      
+      @media only screen and (max-width: 600px) {
+        body {
+          padding: 10px;
+        }
+        
+        .content {
+          padding: 30px 20px;
+        }
+        
+        .header {
+          padding: 30px 20px;
+        }
+        
+        .greeting {
+          font-size: 20px;
+        }
+        
+        .cta-button {
+          display: block;
+          text-align: center;
+        }
+      }
+
+  body
+    .email-container
+      .header
+        .logo
+          span.logo-icon 📚
+          | Bookify
+        .header-subtitle Your Digital Library Awaits
+
+      .content
+        .greeting Hello #{firstName}! 👋
+
+        .message
+          | Welcome to <strong>Bookify</strong>! We're thrilled to have you join our community of book lovers. Your account has been successfully created, and you're now ready to explore thousands of amazing books.
+
+        center
+          a.cta-button(href=url) Get Started
+
+        .features
+          .features-title What You Can Do on Bookify
+          ul.feature-list
+            li.feature-item
+              span.feature-icon
+              | Browse thousands of digital and physical books
+            li.feature-item
+              span.feature-icon
+              | Purchase and read books instantly
+            li.feature-item
+              span.feature-icon
+              | Build your personal digital library
+            li.feature-item
+              span.feature-icon
+              | Leave reviews and discover new favorites
+            li.feature-item
+              span.feature-icon
+              | Track your reading progress
+
+        .divider
+
+        .message
+          | If you have any questions or need assistance, our support team is always here to help. Happy reading!
+
+        .message(style='margin-top: 30px; font-size: 14px; color: #718096;')
+          | Best regards,
+          br
+          strong The Bookify Team
+
+      .footer
+        .footer-text
+          | You're receiving this email because you created an account on Bookify.
+        .footer-text
+          | © #{new Date().getFullYear()} Bookify. All rights reserved.
+        
+        .social-links
+          a.social-link(href='#') About
+          | •
+          a.social-link(href='#') Help Center
+          | •
+          a.social-link(href='#') Contact Us
