@@ -21,14 +21,20 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: function () {
+        // Password required only for local auth
+        return this.authProvider === 'local' || !this.authProvider;
+      },
       minlength: [8, 'Password must be at least 8 characters'],
       select: false, // Don't return password by default
     },
 
     passwordConfirm: {
       type: String,
-      required: [true, 'Please confirm your password'],
+      required: function () {
+        // Only required when password is being set
+        return this.isModified('password') && (this.authProvider === 'local' || !this.authProvider);
+      },
       validate: {
         validator: function (value) {
           // Only validate on create or when password is modified
@@ -48,6 +54,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Last name is required'],
       trim: true,
+    },
+
+    // ==================== AUTH PROVIDER ====================
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
+    },
+
+    googleId: {
+      type: String,
+      sparse: true, // Allow null values but unique when present
     },
 
     // ==================== ROLE & STATUS ====================
@@ -170,6 +188,7 @@ const userSchema = new mongoose.Schema(
 
     // ==================== TIMESTAMPS ====================
     lastLoginAt: Date,
+    passwordChangedAt: Date,
   },
   {
     timestamps: true, // createdAt, updatedAt
@@ -182,6 +201,7 @@ const userSchema = new mongoose.Schema(
 // userSchema.index({ email: 1 });
 userSchema.index({ role: 1, isActive: 1 });
 userSchema.index({ 'authorInfo.isApproved': 1 });
+// userSchema.index({ googleId: 1 }, { sparse: true }); // For OAuth user lookups
 
 // ==================== VIRTUALS ====================
 // Full name virtual
@@ -189,11 +209,10 @@ userSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// ==================== PRE-SAVE HOOKS ====================
 // Hash password before saving
 userSchema.pre('save', async function () {
-  // Only hash password if it's modified
-  if (!this.isModified('password')) return;
+  // Skip if password doesn't exist (OAuth users) or not modified
+  if (!this.password || !this.isModified('password')) return;
 
   // Hash password with cost factor 12 (as per SRS NFR-SEC-001)
   this.password = await bcrypt.hash(this.password, 12);
@@ -246,7 +265,14 @@ userSchema.methods.updateLastLogin = function () {
   this.lastLoginAt = new Date();
   return this.save({ validateBeforeSave: false });
 };
-
+userSchema.methods.checkPasswordChanged = function (jwtTimeStemp) {
+  if (this.passwordChangedAt) {
+    //password changed
+    const changedDate = this.passwordChangedAt.getTime() / 1000;
+    return jwtTimeStemp < changedDate;
+  }
+  return false; //not changed
+};
 // ==================== STATIC METHODS ====================
 // Find user by email
 userSchema.statics.findByEmail = function (email) {
