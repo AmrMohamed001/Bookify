@@ -58,16 +58,13 @@ module.exports = class ApiFeatures {
             if (noDocs <= skip) throw new Error('this page is not exist');
         return this;
     }
-    search() {
+    search(searchFields = ['title', 'description']) {
         if (this.queryString.search) {
-            this.query = this.query.find({
-                $or: [
-                    { title: { $regex: this.queryString.search, $options: 'i' } },
-                    { description: { $regex: this.queryString.search, $options: 'i' } },
-                    { author: { $regex: this.queryString.search, $options: 'i' } },
-                    { category: { $regex: this.queryString.search, $options: 'i' } },
-                ]
-            })
+            const searchQuery = searchFields.map(field => ({
+                [field]: { $regex: this.queryString.search, $options: 'i' }
+            }));
+
+            this.query = this.query.find({ $or: searchQuery });
         }
         return this;
     }

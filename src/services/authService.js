@@ -1,7 +1,8 @@
 const crypto = require('crypto');
+const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
-const sendEmail = require('../utils/sendEmail');
+const SendEmail = require('../utils/SendEmail');
 const AppError = require('../utils/appError');
 
 // ==================== HELPER FUNCTIONS ====================
@@ -41,27 +42,31 @@ exports.register = async userData => {
 
   // Store hashed token and expiration (24 hours)
   user.emailVerificationToken = hashedToken;
-  user.emailVerificationExpires = Date.now() + 1 * 60 * 60 * 1000; // 24 hours
+  user.emailVerificationExpires = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
   await user.save({ validateBeforeSave: false });
 
   // Create verification URL
-  const verificationUrl = `$http://localhost:3000/api/v1/auth/verify-email?token=${verificationToken}`; //TODO: Change to production URL
+  const verificationUrl = `${process.env.HOSTURL}/api/v1/auth/verify-email?token=${verificationToken}`;
 
   // Send verification email
   try {
-    await new sendEmail(user, verificationUrl).sendVerifyEmail();
+    await new SendEmail(user, verificationUrl).sendVerifyEmail();
   } catch (error) {
-    // If email fails, still return success but log error
     console.error('Failed to send verification email:', error);
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return {
+      user: null,
+      message: 'Failed to send verification email',
+    };
   }
 
-  // Remove password from output
   user.password = undefined;
 
   return {
     user,
-    message:
-      'Registration successful! Please check your email to verify your account.',
+    message: 'Registration successful! Please check your email to verify your account.',
   };
 };
 
@@ -79,7 +84,6 @@ exports.verifyEmail = async token => {
     throw new AppError(400, 'Invalid or expired verification token');
   }
 
-  // Mark email as verified
   user.isEmailVerified = true;
   user.emailVerificationToken = undefined;
   user.emailVerificationExpires = undefined;
@@ -90,35 +94,30 @@ exports.verifyEmail = async token => {
   };
 };
 
-/**
- * User login
- * @param {String} email - User email
- * @param {String} password - User password
- * @returns {Object} - User, access token, and refresh token
- */
 exports.login = async (email, password) => {
   // Check if email and password exist
   if (!email || !password) {
-    throw new Error('Please provide email and password');
+    throw new AppError(400, 'Please provide email and password');
   }
 
   // Find user and include password field
   const user = await User.findOne({ email }).select('+password');
 
   if (!user || !(await user.comparePassword(password))) {
-    throw new Error('Incorrect email or password');
+    throw new AppError(400, 'Incorrect email or password');
   }
 
   // Check if user is active
   if (!user.isActive) {
-    throw new Error(
+    throw new AppError(
+      400,
       'Your account has been deactivated. Please contact support.'
     );
   }
 
   // Check if email is verified (optional - based on your requirements)
   if (!user.isEmailVerified) {
-    throw new Error('Please verify your email before logging in');
+    throw new AppError(400, 'Please verify your email before logging in');
   }
 
   // Generate tokens
@@ -133,7 +132,6 @@ exports.login = async (email, password) => {
   user.updateLastLogin();
   await user.save({ validateBeforeSave: false });
 
-  // Remove password from output
   user.password = undefined;
 
   return {
@@ -143,22 +141,20 @@ exports.login = async (email, password) => {
   };
 };
 
-/**
- * Refresh access token
- * @param {String} refreshToken - Refresh token
- * @returns {Object} - New access token
- */
 exports.refreshAccessToken = async refreshToken => {
   if (!refreshToken) {
-    throw new Error('Refresh token is required');
+    throw new AppError(400, 'Refresh token is required');
   }
 
   // Verify refresh token
   let decoded;
   try {
-    decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    decoded = await promisify(jwt.verify)(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
   } catch (error) {
-    throw new Error('Invalid or expired refresh token');
+    throw new AppError(400, 'Invalid or expired refresh token');
   }
 
   // Hash the refresh token to find in database
@@ -172,14 +168,11 @@ exports.refreshAccessToken = async refreshToken => {
   });
 
   if (!user) {
-    throw new Error('Invalid refresh token');
+    throw new AppError(400, 'Invalid refresh token');
   }
 
-  // Generate new access token
   const newAccessToken = generateAccessToken(user._id);
 
-  // Optional: Implement refresh token rotation for better security
-  // Remove old refresh token and generate new one
   const newRefreshToken = generateRefreshToken(user._id);
   const hashedNewRefreshToken = hashToken(newRefreshToken);
   const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -194,36 +187,22 @@ exports.refreshAccessToken = async refreshToken => {
   };
 };
 
-/**
- * User logout
- * @param {String} userId - User ID
- * @param {String} refreshToken - Refresh token to invalidate
- * @returns {Object} - Success message
- */
 exports.logout = async (userId, refreshToken) => {
   const user = await User.findById(userId);
 
   if (!user) {
-    throw new Error('User not found');
+    throw new AppError(400, 'User not found');
   }
 
-  // Hash and remove refresh token
   const hashedToken = hashToken(refreshToken);
   user.removeRefreshToken(hashedToken);
   await user.save({ validateBeforeSave: false });
-
-  // TODO: Log logout event for security audit
 
   return {
     message: 'Logged out successfully',
   };
 };
 
-/**
- * Forgot password - send reset email
- * @param {String} email - User email
- * @returns {Object} - Success message
- */
 exports.forgotPassword = async email => {
   const user = await User.findOne({ email });
 
@@ -245,25 +224,16 @@ exports.forgotPassword = async email => {
   await user.save({ validateBeforeSave: false });
 
   // Create reset URL
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const resetUrl = `$${process.env.HOSTURL}/api/v1/reset-password?token=${resetToken}`;
 
-  // Send password reset email
+  // Send verification email
   try {
-    await sendEmail({
-      email: user.email,
-      subject: 'Reset Your Password - Bookify',
-      template: 'passwordReset',
-      context: {
-        firstName: user.firstName,
-        url: resetUrl,
-      },
-    });
+    await new SendEmail(user, resetUrl).sendResetPassword();
   } catch (error) {
-    // Clear reset token if email fails
+    console.error('Failed to send reset email:', error);
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
-
     throw new Error('Failed to send password reset email. Please try again.');
   }
 
@@ -273,13 +243,6 @@ exports.forgotPassword = async email => {
   };
 };
 
-/**
- * Reset password
- * @param {String} token - Reset token from email
- * @param {String} newPassword - New password
- * @param {String} passwordConfirm - Password confirmation
- * @returns {Object} - Success message
- */
 exports.resetPassword = async (token, newPassword, passwordConfirm) => {
   // Hash the token to compare with stored hash
   const hashedToken = hashToken(token);
@@ -297,6 +260,7 @@ exports.resetPassword = async (token, newPassword, passwordConfirm) => {
   // Set new password
   user.password = newPassword;
   user.passwordConfirm = passwordConfirm;
+  user.passwordChangedAt = Date.now();
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
 
@@ -310,20 +274,61 @@ exports.resetPassword = async (token, newPassword, passwordConfirm) => {
   };
 };
 
-/**
- * Resend verification email
- * @param {String} email - User email
- * @returns {Object} - Success message
- */
+exports.updatePassword = async (userId, currentPassword, newPassword, passwordConfirm) => {
+  // 1) Get user with password field
+  const user = await User.findById(userId).select('+password');
+
+  if (!user) {
+    throw new AppError(404, 'User not found');
+  }
+
+  // 2) Check if current password is correct
+  if (!(await user.comparePassword(currentPassword))) {
+    throw new AppError(401, 'Your current password is incorrect');
+  }
+
+  // 3) Check if new password is different from current
+  if (currentPassword === newPassword) {
+    throw new AppError(400, 'New password must be different from current password');
+  }
+
+  // 4) Update password
+  user.password = newPassword;
+  user.passwordConfirm = passwordConfirm;
+  user.passwordChangedAt = Date.now();
+
+  // 5) Clear all refresh tokens for security (force re-login on all devices)
+  user.refreshTokens = [];
+
+  await user.save();
+
+  // 6) Generate new tokens for current session
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  // Hash and store new refresh token
+  const hashedRefreshToken = hashToken(refreshToken);
+  const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  user.addRefreshToken(hashedRefreshToken, refreshTokenExpiry);
+  await user.save({ validateBeforeSave: false });
+
+  return {
+    message: 'Password updated successfully',
+    accessToken,
+    refreshToken,
+  };
+};
+
 exports.resendVerificationEmail = async email => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new Error('User not found');
+    throw new AppError(400, 'User not found');
   }
 
   if (user.isEmailVerified) {
-    throw new Error('Email is already verified');
+    throw new AppError(400, 'Email is already verified');
   }
 
   // Generate new verification token
@@ -336,20 +341,58 @@ exports.resendVerificationEmail = async email => {
   await user.save({ validateBeforeSave: false });
 
   // Create verification URL
-  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  const verificationUrl = `${process.env.HOSTURL}/api/v1/auth/verify-email?token=${verificationToken}`;
 
   // Send verification email
-  await sendEmail({
-    email: user.email,
-    subject: 'Verify Your Email - Bookify',
-    template: 'verifyEmail',
-    context: {
-      firstName: user.firstName,
-      url: verificationUrl,
-    },
-  });
+  try {
+    await new SendEmail(user, verificationUrl).sendVerifyEmail();
+  } catch (error) {
+    console.error('Failed to send verification email:', error);
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return {
+      message: 'Failed to send verification email',
+    };
+  }
 
   return {
-    message: 'Verification email sent successfully',
+    message:
+      'Registration successful! Please check your email to verify your account.',
   };
 };
+
+
+exports.googleAuth = async (userFromPassport) => {
+  // Refetch user to avoid "parallel save" error
+  const user = await User.findById(userFromPassport._id);
+
+  if (!user) {
+    throw new AppError(404, 'User not found');
+  }
+
+  // Generate tokens
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  // Hash and store refresh token
+  const hashedRefreshToken = hashToken(refreshToken);
+  const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  user.addRefreshToken(hashedRefreshToken, refreshTokenExpiry);
+
+  user.lastLoginAt = new Date();
+
+  await user.save({ validateBeforeSave: false });
+
+  user.password = undefined;
+  user.refreshTokens = undefined;
+
+  return {
+    user,
+    accessToken,
+    refreshToken,
+  };
+};
+
+

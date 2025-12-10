@@ -1,6 +1,6 @@
 const catService = require('../services/CategoryService');
 const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/AppError');
+const AppError = require('../utils/appError');
 /////////////////////////////////////////////////////////////////////////////////
 // @desc    Get list of categories
 // @route   GET /api/v1/categories

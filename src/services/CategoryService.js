@@ -3,7 +3,7 @@ const ApiFeatures = require("../utils/Api-Features");
 
 exports.getAll = async (query) => {
     const noDocs = await countDocs();
-    const features = new ApiFeatures(query, Category.find()).filter().sort().select().paging(noDocs)
+    const features = new ApiFeatures(query, Category.find()).filter().sort(['name']).select().paging(noDocs)
     return await features.query
 }
 exports.getOne = async (catId) => {
