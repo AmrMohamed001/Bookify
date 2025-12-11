@@ -28,16 +28,25 @@ const schema = new mongoose.Schema(
   }
 );
 
-// Generate slug on save
-schema.pre('save', function (next) {
-  this.slug = slugify(this.name, { lower: true });
+schema.virtual('books', {
+  ref: 'Book',
+  localField: '_id',
+  foreignField: 'category',
+  match: { status: 'approved' },
 });
 
-// Regenerate slug on update if name is modified
-schema.pre('findOneAndUpdate', function (next) {
+schema.pre('save', function () {
+  if (this.isModified('name')) {
+    this.slug = slugify(this.name, { lower: true });
+  }
+});
+
+schema.pre('findOneAndUpdate', function () {
   const update = this.getUpdate();
   if (update.name) {
     update.slug = slugify(update.name, { lower: true });
   }
 });
+
 module.exports = mongoose.model('Category', schema);
+

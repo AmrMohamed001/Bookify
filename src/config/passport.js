@@ -12,13 +12,12 @@ passport.use(
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
-                // Extract user info from Google profile
+
                 const email = profile.emails[0].value;
                 const firstName = profile.name.givenName;
                 const lastName = profile.name.familyName;
                 const avatar = profile.photos[0]?.value;
 
-                // Check if user exists with this email
                 let user = await User.findOne({ email });
 
                 if (user) {
@@ -26,9 +25,8 @@ passport.use(
                     if (!user.googleId) {
                         user.googleId = profile.id;
                         user.authProvider = 'google';
-                        user.isEmailVerified = true; // Auto-verify Google users
+                        user.isEmailVerified = true;
 
-                        // Safely update avatar if not already set
                         if (avatar) {
                             if (!user.profile) user.profile = {};
                             if (!user.profile.avatar) user.profile.avatar = {};
@@ -36,8 +34,6 @@ passport.use(
                                 user.profile.avatar.url = avatar;
                             }
                         }
-
-                        await user.save({ validateBeforeSave: false });
                     }
                 } else {
                     // Create new user with Google account
@@ -47,18 +43,15 @@ passport.use(
                         lastName,
                         googleId: profile.id,
                         authProvider: 'google',
-                        isEmailVerified: true, // Auto-verify Google users
+                        isEmailVerified: true,
                         profile: {
                             avatar: {
                                 url: avatar,
                             },
                         },
                     });
-
-                    // Save without validation (OAuth users don't have passwords)
-                    await user.save({ validateBeforeSave: false });
                 }
-
+                await user.save({ validateBeforeSave: false });
                 return done(null, user);
             } catch (error) {
                 return done(error, null);

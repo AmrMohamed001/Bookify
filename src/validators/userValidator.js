@@ -1,7 +1,6 @@
 const { body, param, query } = require('express-validator');
 const validatorMiddleware = require('../middlewares/validatorMiddleware');
 
-// Validate update profile
 exports.validateUpdateProfile = [
     body('firstName')
         .optional()
@@ -74,7 +73,6 @@ exports.validateUpdateProfile = [
     validatorMiddleware,
 ];
 
-// Validate update user by admin
 exports.validateUpdateUser = [
     body('firstName')
         .optional()
@@ -101,7 +99,7 @@ exports.validateUpdateUser = [
     validatorMiddleware,
 ];
 
-// Validate apply for author
+
 exports.validateApplyForAuthor = [
     body('biography')
         .trim()
@@ -113,7 +111,7 @@ exports.validateApplyForAuthor = [
     validatorMiddleware,
 ];
 
-// Validate approve/reject author
+
 exports.validateAuthorAction = [
     param('id')
         .isMongoId()
@@ -122,7 +120,7 @@ exports.validateAuthorAction = [
     validatorMiddleware,
 ];
 
-// Validate reject author with reason
+
 exports.validateRejectAuthor = [
     param('id')
         .isMongoId()
@@ -138,7 +136,7 @@ exports.validateRejectAuthor = [
     validatorMiddleware,
 ];
 
-// Validate user ID param
+
 exports.validateUserId = [
     param('id')
         .isMongoId()
@@ -147,7 +145,6 @@ exports.validateUserId = [
     validatorMiddleware,
 ];
 
-// Validate query params for getAllUsers
 exports.validateGetAllUsers = [
     query('page')
         .optional()

@@ -1,7 +1,7 @@
 const catService = require('../services/CategoryService');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
-/////////////////////////////////////////////////////////////////////////////////
+
 // @desc    Get list of categories
 // @route   GET /api/v1/categories
 // @access  Public
@@ -14,32 +14,36 @@ exports.getCategories = catchAsync(async (req, res, next) => {
     data: { categories: cats },
   });
 });
+
 // @desc    Get specific category by id
 // @route   GET /api/v1/categories/:id
 // @access  Public
 exports.getCategory = catchAsync(async (req, res, next) => {
-  const cat = await catService.getOne(req.params.id);
+  const populateBooks = req.query.books === 'true';
+  const cat = await catService.getOne(req.params.id, populateBooks);
   if (!cat) return next(new AppError(404, 'No category found with this id'));
   res.status(200).json({
     status: 'success',
     data: { category: cat },
   });
 });
+
 // @desc    Create category
 // @route   POST  /api/v1/categories
-// @access  Private
+// @access  Private/Admin
 exports.AddCategory = catchAsync(async (req, res, next) => {
-  const newCategory = await catService.create(req.body);
+  const newCategory = await catService.create(req.body, req.file);
   res.status(201).json({
     status: 'success',
     data: { newCategory },
   });
 });
+
 // @desc    Update specific category
 // @route   PATCH /api/v1/categories/:id
-// @access  Private
+// @access  Private/Admin
 exports.updateCategory = catchAsync(async (req, res, next) => {
-  const cat = await catService.update(req.params.id, req.body);
+  const cat = await catService.update(req.params.id, req.body, req.file);
   res.status(200).json({
     status: 'success',
     data: { cat },
@@ -48,11 +52,12 @@ exports.updateCategory = catchAsync(async (req, res, next) => {
 
 // @desc    Delete specific category
 // @route   DELETE /api/v1/categories/:id
-// @access  Private
+// @access  Private/Admin
 exports.deleteCategory = catchAsync(async (req, res, next) => {
-  const cat = await catService.delete(req.params.id);
+  await catService.delete(req.params.id);
   res.status(204).json({
     status: 'success',
     data: null,
   });
 });
+
