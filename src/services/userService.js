@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 const ApiFeatures = require('../utils/Api-Features');
+const { uploadAvatar, deleteFile } = require('../utils/cloudinaryHelpers');
 
 
 exports.getAllUsers = async (query) => {
@@ -28,27 +29,35 @@ exports.getAllUsers = async (query) => {
 exports.getUserById = async (userId) => {
     const user = await User.findById(userId).select('-password -refreshTokens');
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
-    }
+    if (!user) throw new AppError(404, 'User not found');
     return user;
 };
 
 exports.getCurrentUser = async (userId) => {
     const user = await User.findById(userId).select('-password -refreshTokens');
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
-    }
+    if (!user) throw new AppError(404, 'User not found');
 
     return user;
 };
 
-exports.updateProfile = async (userId, updateData) => {
+exports.updateProfile = async (userId, updateData, avatarFile = null) => {
     const user = await User.findById(userId);
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
+    if (!user) throw new AppError(404, 'User not found');
+
+    // Handle avatar file upload
+    if (avatarFile) {
+        // Delete old avatar if exists
+        if (user.profile?.avatar?.publicId) {
+            await deleteFile(user.profile.avatar.publicId, 'image').catch(console.error);
+        }
+        // Upload new avatar
+        const avatarResult = await uploadAvatar(avatarFile.buffer, userId);
+        user.profile.avatar = {
+            url: avatarResult.url,
+            publicId: avatarResult.publicId,
+        };
     }
 
     // Update basic fields
@@ -57,14 +66,6 @@ exports.updateProfile = async (userId, updateData) => {
 
     // Update profile fields safely
     if (updateData.profile) {
-        // Update avatar
-        if (updateData.profile.avatar) {
-            user.profile.avatar = {
-                url: updateData.profile.avatar.url || user.profile.avatar?.url,
-                publicId: updateData.profile.avatar.publicId || user.profile.avatar?.publicId,
-            };
-        }
-
         // Update bio
         if (updateData.profile.bio !== undefined) {
             user.profile.bio = updateData.profile.bio;
@@ -95,9 +96,7 @@ exports.updateUser = async (userId, updateData) => {
 
     const filteredData = {};
     Object.keys(updateData).forEach((key) => {
-        if (allowedFields.includes(key)) {
-            filteredData[key] = updateData[key];
-        }
+        if (allowedFields.includes(key)) filteredData[key] = updateData[key];
     });
 
     const user = await User.findByIdAndUpdate(userId, filteredData, {
@@ -105,9 +104,7 @@ exports.updateUser = async (userId, updateData) => {
         runValidators: true,
     }).select('-password -refreshTokens');
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
-    }
+    if (!user) throw new AppError(404, 'User not found');
 
     return user;
 };
@@ -119,9 +116,7 @@ exports.deactivateUser = async (userId) => {
         { new: true }
     ).select('-password -refreshTokens');
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
-    }
+    if (!user) throw new AppError(404, 'User not found');
 
     return user;
 };
@@ -129,9 +124,7 @@ exports.deactivateUser = async (userId) => {
 exports.deleteUser = async (userId) => {
     const user = await User.findByIdAndDelete(userId);
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
-    }
+    if (!user) throw new AppError(404, 'User not found');
 
     return user;
 };
@@ -139,13 +132,9 @@ exports.deleteUser = async (userId) => {
 exports.applyForAuthor = async (userId, authorData) => {
     const user = await User.findById(userId);
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
-    }
+    if (!user) throw new AppError(404, 'User not found');
 
-    if (user.role === 'author') {
-        throw new AppError(400, 'You are already an author');
-    }
+    if (user.role === 'author') throw new AppError(400, 'You are already an author');
 
     user.role = 'author';
     user.authorInfo = {
@@ -164,17 +153,11 @@ exports.applyForAuthor = async (userId, authorData) => {
 exports.approveAuthor = async (userId, adminId) => {
     const user = await User.findById(userId);
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
-    }
+    if (!user) throw new AppError(404, 'User not found');
 
-    if (user.role !== 'author') {
-        throw new AppError(400, 'User is not an author applicant');
-    }
+    if (user.role !== 'author') throw new AppError(400, 'User is not an author applicant');
 
-    if (user.authorInfo.isApproved) {
-        throw new AppError(400, 'Author is already approved');
-    }
+    if (user.authorInfo.isApproved) throw new AppError(400, 'Author is already approved');
 
     user.authorInfo.isApproved = true;
     user.authorInfo.approvedAt = new Date();
@@ -191,13 +174,9 @@ exports.approveAuthor = async (userId, adminId) => {
 exports.rejectAuthor = async (userId, rejectionReason) => {
     const user = await User.findById(userId);
 
-    if (!user) {
-        throw new AppError(404, 'User not found');
-    }
+    if (!user) throw new AppError(404, 'User not found');
 
-    if (user.role !== 'author') {
-        throw new AppError(400, 'User is not an author applicant');
-    }
+    if (user.role !== 'author') throw new AppError(400, 'User is not an author applicant');
 
     user.role = 'user';
     user.authorInfo.isApproved = false;
@@ -210,7 +189,6 @@ exports.rejectAuthor = async (userId, rejectionReason) => {
         user,
     };
 };
-
 
 exports.getPendingAuthors = async () => {
     const pendingAuthors = await User.find({

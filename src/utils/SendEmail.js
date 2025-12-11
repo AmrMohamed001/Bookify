@@ -12,7 +12,7 @@ module.exports = class SendEmail {
 
   transporter() {
     if (process.env.NODE_ENV === 'production') {
-      // sendGrip
+      // SendGrip
       return nodemailer.createTransport({
         service: 'gmail',
         host: 'smtp.gmail.com',

@@ -122,13 +122,8 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 // @route   GET /api/v1/auth/google/callback
 // @access  Public
 exports.googleCallback = catchAsync(async (req, res, next) => {
-  if (!req.user) {
-    return next(new AppError(401, 'Google authentication failed'));
-  }
-
+  if (!req.user) return next(new AppError(401, 'Google authentication failed'));
   const result = await authService.googleAuth(req.user);
-
   const redirectUrl = `${HOSTURL}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
-
   res.redirect(redirectUrl);
 });

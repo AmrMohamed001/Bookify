@@ -5,7 +5,7 @@ const User = require('../models/userModel');
 const SendEmail = require('../utils/SendEmail');
 const AppError = require('../utils/appError');
 
-// ==================== HELPER FUNCTIONS ====================
+// #region ==================== HELPER FUNCTIONS ====================
 const generateAccessToken = userId => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
@@ -25,6 +25,7 @@ const generateToken = () => {
 const hashToken = token => {
   return crypto.createHash('sha256').update(token).digest('hex');
 };
+// #endregion
 
 exports.register = async userData => {
   // Create new user

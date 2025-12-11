@@ -49,7 +49,7 @@ exports.getMe = catchAsync(async (req, res, next) => {
 // @route   PATCH /api/v1/users/me
 // @access  Private
 exports.updateMe = catchAsync(async (req, res, next) => {
-    const user = await userService.updateProfile(req.user.id, req.body);
+    const user = await userService.updateProfile(req.user.id, req.body, req.file);
 
     res.status(200).json({
         status: 'success',
