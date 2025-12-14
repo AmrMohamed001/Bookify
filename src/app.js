@@ -9,6 +9,7 @@ const categoryRouter = require('./routes/categoryRoute');
 const authRouter = require('./routes/authRoute');
 const userRouter = require('./routes/userRoute');
 const bookRouter = require('./routes/bookRoute');
+const reviewRouter = require('./routes/reviewRoute');
 /////////////////////////////////////////////////////////////////
 // MIDDLEWARES
 app.use(express.json({ limit: '10kb' }));
@@ -30,6 +31,7 @@ app.use('/api/v1/categories', categoryRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/books', bookRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 app.all('/*splat', (req, res, next) => {
   return next(
@@ -38,3 +40,5 @@ app.all('/*splat', (req, res, next) => {
 });
 app.use(globalErrorHandlingMiddleware);
 module.exports = app;
+
+//Todo: cart , order , review , wishlist , checkout ,  push notifications ,  personalized recommendations , Author and admin dashboards , invoice generation , user library with reading progress tracking , review Helpfulness mark reviews as helpful , summery section using ai (groq)
