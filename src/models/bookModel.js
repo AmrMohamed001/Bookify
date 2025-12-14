@@ -205,6 +205,12 @@ bookSchema.virtual('pricing.physical.inStock').get(function () {
   return this.pricing.physical.stock > 0;
 });
 
+bookSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'bookId',
+  localField: '_id',
+});
+
 bookSchema.methods.incrementViews = function () {
   this.stats.viewCount += 1;
   return this.save();
@@ -264,7 +270,10 @@ bookSchema.pre('save', async function () {
 
 bookSchema.pre('save', function () {
   if (this.isNew) {
-    this.slug = slugify(`${this.title}-${Date.now()}`, { lower: true, strict: true });
+    this.slug = slugify(`${this.title}-${Date.now()}`, {
+      lower: true,
+      strict: true,
+    });
   }
 });
 
