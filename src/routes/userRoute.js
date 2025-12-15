@@ -1,5 +1,7 @@
 const router = require('express').Router();
 const controller = require('../controllers/userController');
+const wishlistRoute = require('./wishlistRoute');
+const addressRoute = require('./addressRoute');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
 const {
   uploadAvatar,
@@ -15,6 +17,10 @@ const {
   validateGetAllUsers,
 } = require('../validators/userValidator');
 ////////////////////////////////////////////////////////////////////
+// Nested routes for wishlist and addresses
+router.use('/me/wishlist', wishlistRoute);
+router.use('/me/addresses', addressRoute);
+
 router
   .route('/me')
   .get(protect, controller.getMe)

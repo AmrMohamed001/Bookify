@@ -56,6 +56,7 @@ const schema = new mongoose.Schema(
 );
 
 // Indexes for sorting
+schema.index({ bookId: 1, userId: 1 }, { unique: true });
 schema.index({ bookId: 1, createdAt: -1 });
 schema.index({ bookId: 1, rating: -1 });
 schema.index({ bookId: 1, helpfulCount: -1 });

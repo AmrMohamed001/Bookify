@@ -105,6 +105,11 @@ const userSchema = new mongoose.Schema(
       },
       addresses: [
         {
+          label: {
+            type: String,
+            trim: true,
+            maxlength: 50,
+          },
           type: {
             type: String,
             enum: ['shipping', 'billing'],
@@ -113,22 +118,27 @@ const userSchema = new mongoose.Schema(
           street: {
             type: String,
             required: true,
+            trim: true,
           },
           city: {
             type: String,
             required: true,
+            trim: true,
           },
           state: {
             type: String,
             required: true,
+            trim: true,
           },
           zipCode: {
             type: String,
             required: true,
+            trim: true,
           },
           country: {
             type: String,
             required: true,
+            trim: true,
           },
           isDefault: {
             type: Boolean,
@@ -197,7 +207,6 @@ userSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-
 userSchema.pre('save', async function () {
   if (!this.password || !this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 12);
@@ -235,7 +244,6 @@ userSchema.methods.addRefreshToken = function (token, expiresAt) {
 userSchema.methods.removeRefreshToken = function (token) {
   this.refreshTokens = this.refreshTokens.filter(rt => rt.token !== token);
 };
-
 
 userSchema.methods.updateLastLogin = function () {
   this.lastLoginAt = new Date();
