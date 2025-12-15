@@ -41,4 +41,13 @@ app.all('/*splat', (req, res, next) => {
 app.use(globalErrorHandlingMiddleware);
 module.exports = app;
 
-//Todo: cart , order , review , wishlist , checkout ,  push notifications ,  personalized recommendations , Author and admin dashboards , invoice generation , user library with reading progress tracking , review Helpfulness mark reviews as helpful , summery section using ai (groq)
+/*
+1- Wishlist
+2- Cart , Order and Checkout
+3- push notifications
+4- personalized recommendations
+5- Author and admin dashboards
+6- invoice generation
+7- user library with reading progress tracking
+8- summery section using ai (groq)
+*/
