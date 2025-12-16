@@ -1,9 +1,6 @@
 const Wishlist = require('../models/wishlistModel');
 const AppError = require('../utils/appError');
 
-/**
- * Get user's wishlist with pagination
- */
 exports.getUserWishlist = async (userId, query = {}) => {
   const page = parseInt(query.page) || 1;
   const limit = parseInt(query.limit) || 10;
@@ -33,9 +30,6 @@ exports.getUserWishlist = async (userId, query = {}) => {
   };
 };
 
-/**
- * Add book to wishlist
- */
 exports.addToWishlist = async (userId, bookId) => {
   const existing = await Wishlist.findOne({ user: userId, book: bookId });
   if (existing) {
@@ -53,9 +47,6 @@ exports.addToWishlist = async (userId, bookId) => {
   );
 };
 
-/**
- * Remove book from wishlist by book ID
- */
 exports.removeFromWishlist = async (userId, bookId) => {
   const wishlistItem = await Wishlist.findOneAndDelete({
     user: userId,
@@ -69,25 +60,16 @@ exports.removeFromWishlist = async (userId, bookId) => {
   return wishlistItem;
 };
 
-/**
- * Check if book is in user's wishlist
- */
 exports.isInWishlist = async (userId, bookId) => {
   const wishlistItem = await Wishlist.findOne({ user: userId, book: bookId });
   return !!wishlistItem;
 };
 
-/**
- * Clear user's entire wishlist
- */
 exports.clearWishlist = async userId => {
   const result = await Wishlist.deleteMany({ user: userId });
   return result.deletedCount;
 };
 
-/**
- * Get wishlist count for a user
- */
 exports.getWishlistCount = async userId => {
   return await Wishlist.countDocuments({ user: userId });
 };

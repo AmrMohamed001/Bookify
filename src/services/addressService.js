@@ -1,16 +1,13 @@
 const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 
-/**
- * Get all addresses for a user
- */
 exports.getUserAddresses = async (userId, query = {}) => {
   const user = await User.findById(userId).select('profile.addresses');
   if (!user) throw new AppError(404, 'User not found');
 
   let addresses = user.profile.addresses || [];
 
-  // Filter by type if provided
+  // Filter by type
   if (query.type) {
     addresses = addresses.filter(addr => addr.type === query.type);
   }
@@ -25,9 +22,6 @@ exports.getUserAddresses = async (userId, query = {}) => {
   return addresses;
 };
 
-/**
- * Get a specific address by ID
- */
 exports.getAddress = async (userId, addressId) => {
   const user = await User.findById(userId).select('profile.addresses');
   if (!user) throw new AppError(404, 'User not found');
@@ -38,9 +32,6 @@ exports.getAddress = async (userId, addressId) => {
   return address;
 };
 
-/**
- * Create a new address
- */
 exports.createAddress = async (userId, addressData) => {
   const user = await User.findById(userId);
   if (!user) throw new AppError(404, 'User not found');
@@ -50,7 +41,6 @@ exports.createAddress = async (userId, addressData) => {
     user.profile.addresses = [];
   }
 
-  // Check max addresses limit
   if (user.profile.addresses.length >= 10) {
     throw new AppError(400, 'Maximum 10 addresses allowed');
   }
@@ -78,9 +68,6 @@ exports.createAddress = async (userId, addressData) => {
   return user.profile.addresses[user.profile.addresses.length - 1];
 };
 
-/**
- * Update an address
- */
 exports.updateAddress = async (userId, addressId, updateData) => {
   const user = await User.findById(userId);
   if (!user) throw new AppError(404, 'User not found');
@@ -109,9 +96,6 @@ exports.updateAddress = async (userId, addressId, updateData) => {
   return address;
 };
 
-/**
- * Delete an address
- */
 exports.deleteAddress = async (userId, addressId) => {
   const user = await User.findById(userId);
   if (!user) throw new AppError(404, 'User not found');
@@ -122,7 +106,6 @@ exports.deleteAddress = async (userId, addressId) => {
   const wasDefault = address.isDefault;
   const addressType = address.type;
 
-  // Remove using pull
   user.profile.addresses.pull(addressId);
 
   // If deleted was default, make another one default
@@ -139,9 +122,6 @@ exports.deleteAddress = async (userId, addressId) => {
   return address;
 };
 
-/**
- * Set an address as default
- */
 exports.setDefaultAddress = async (userId, addressId) => {
   const user = await User.findById(userId);
   if (!user) throw new AppError(404, 'User not found');
@@ -160,9 +140,6 @@ exports.setDefaultAddress = async (userId, addressId) => {
   return address;
 };
 
-/**
- * Get default address by type
- */
 exports.getDefaultAddress = async (userId, type) => {
   const user = await User.findById(userId).select('profile.addresses');
   if (!user) throw new AppError(404, 'User not found');
