@@ -10,6 +10,8 @@ const authRouter = require('./routes/authRoute');
 const userRouter = require('./routes/userRoute');
 const bookRouter = require('./routes/bookRoute');
 const reviewRouter = require('./routes/reviewRoute');
+const couponRouter = require('./routes/couponRoute');
+const cartRouter = require('./routes/cartRoute');
 /////////////////////////////////////////////////////////////////
 // MIDDLEWARES
 app.use(express.json({ limit: '10kb' }));
@@ -32,6 +34,8 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/books', bookRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/coupons', couponRouter);
+app.use('/api/v1/cart', cartRouter);
 
 app.all('/*splat', (req, res, next) => {
   return next(
@@ -42,7 +46,6 @@ app.use(globalErrorHandlingMiddleware);
 module.exports = app;
 
 /*
-1- Wishlist
 2- Cart , Order and Checkout
 3- push notifications
 4- personalized recommendations

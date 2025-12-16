@@ -7,31 +7,19 @@ const {
   addressIdValidator,
 } = require('../validators/addressValidator');
 
-// All address routes require authentication
 router.use(protect);
 
-// @route   GET /api/v1/users/me/addresses
-// @desc    Get all addresses
-router.get('/', controller.getAddresses);
+router
+  .route('/')
+  .get(controller.getAddresses)
+  .post(createAddressValidator, controller.createAddress);
 
-// @route   POST /api/v1/users/me/addresses
-// @desc    Create new address
-router.post('/', createAddressValidator, controller.createAddress);
+router
+  .route('/:id')
+  .get(addressIdValidator, controller.getAddress)
+  .patch(updateAddressValidator, controller.updateAddress)
+  .delete(addressIdValidator, controller.deleteAddress);
 
-// @route   GET /api/v1/users/me/addresses/:id
-// @desc    Get specific address
-router.get('/:id', addressIdValidator, controller.getAddress);
-
-// @route   PATCH /api/v1/users/me/addresses/:id
-// @desc    Update address
-router.patch('/:id', updateAddressValidator, controller.updateAddress);
-
-// @route   DELETE /api/v1/users/me/addresses/:id
-// @desc    Delete address
-router.delete('/:id', addressIdValidator, controller.deleteAddress);
-
-// @route   PATCH /api/v1/users/me/addresses/:id/default
-// @desc    Set address as default
 router.patch('/:id/default', addressIdValidator, controller.setDefaultAddress);
 
 module.exports = router;
