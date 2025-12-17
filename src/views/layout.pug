@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title= title || "Bookify - Your Digital & Physical Book Marketplace"
+    link(rel="stylesheet" href="/styles/main.css")
+    link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+    link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css")
+    block styles
+
+  body
+    // NAVBAR - Two Row Structure
+    nav.navbar.navbar-expand-lg.navbar-light.sticky-top.shadow-sm(style="background-color: var(--white); border-bottom: 1px solid var(--border-color);")
+      // TOP ROW - Logo, Search, Icons
+      .container-fluid.px-4.py-3
+        .row.w-100.align-items-center
+          .col-auto
+            a.navbar-brand.fw-bold(href="/", style="color: var(--primary-color);") 
+              i.fas.fa-book
+              |  Bookify
+          .col.mx-3
+            .input-group.position-relative
+              input.form-control.pill-input(type="search" placeholder="Search for books, authors..." aria-label="Search" id="searchInput" style="border-radius: 9999px; padding-right: 50px;")
+              button.btn.position-absolute.end-0.top-50.translate-middle-y.me-1(type="button" style="background-color: var(--primary-color); color: var(--white); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: none;")
+                i.fas.fa-search
+          .col-auto.d-flex.gap-3
+            if user
+              a.nav-link(href="/wishlist", title="Wishlist")
+                i.fas.fa-heart(style="color: var(--primary-color); font-size: 1.25rem;")
+              a.nav-link.position-relative(href="/cart", title="Shopping Cart")
+                i.fas.fa-shopping-cart(style="color: var(--primary-color); font-size: 1.25rem;")
+                if cartCount > 0
+                  span.badge.bg-danger.position-absolute.top-0.start-100.translate-middle(style="font-size: 0.75rem;")= cartCount
+              .dropdown
+                button.nav-link.dropdown-toggle(type="button" data-bs-toggle="dropdown", style="border: none; background: none; color: var(--text-color);")
+                  i.fas.fa-user-circle(style="font-size: 1.5rem;")
+                ul.dropdown-menu.dropdown-menu-end
+                  li
+                    a.dropdown-item(href="/profile")
+                      i.fas.fa-user.me-2
+                      | My Profile
+                  li
+                    a.dropdown-item(href="/dashboard")
+                      i.fas.fa-home.me-2
+                      | Dashboard
+                  li
+                    a.dropdown-item(href="/library")
+                      i.fas.fa-book.me-2
+                      | My Library
+                  li
+                    a.dropdown-item(href="/wishlist")
+                      i.fas.fa-heart.me-2
+                      | Wishlist
+                  li
+                    a.dropdown-item(href="/orders")
+                      i.fas.fa-receipt.me-2
+                      | Orders
+                  if user.role === 'author'
+                    li
+                      hr.dropdown-divider
+                    li
+                      a.dropdown-item(href="/author/dashboard")
+                        i.fas.fa-pen.me-2
+                        | Author Dashboard
+                  if user.role === 'admin'
+                    li
+                      hr.dropdown-divider
+                    li
+                      a.dropdown-item(href="/admin/dashboard")
+                        i.fas.fa-cog.me-2
+                        | Admin Dashboard
+                  li
+                    hr.dropdown-divider
+                  li
+                    a.dropdown-item(href="/api/v1/auth/logout")
+                      i.fas.fa-sign-out-alt.me-2
+                      | Logout
+            else
+              a.nav-link(href="/login", style="color: var(--primary-color); font-weight: 600;") Login
+              a.nav-link(href="/register", style="color: var(--primary-color); font-weight: 600;") Register
+
+      // BOTTOM ROW - Navigation Links
+      .container-fluid.px-4.border-top(style="border-color: var(--border-color);")
+        .navbar-nav.flex-row.py-2.gap-4
+          a.nav-link(href="/", style="color: var(--text-color);") Home
+          a.nav-link(href="/books", style="color: var(--text-color);") Browse Books
+          a.nav-link(href="/books?category=fiction", style="color: var(--text-color);") Fiction
+          a.nav-link(href="/books?category=non-fiction", style="color: var(--text-color);") Non-Fiction
+          a.nav-link(href="/books?category=bestsellers", style="color: var(--text-color);") Bestsellers
+
+    // MAIN CONTENT
+    main
+      block content
+
+    // FOOTER
+    footer.bg-dark.text-light.py-5.mt-5
+      .container
+        .row
+          .col-md-4.mb-4
+            h5.fw-bold Bookify
+            p.text-muted Your gateway to millions of books, digital and physical.
+            .d-flex.gap-3
+              a.text-light(href="#") 
+                i.fab.fa-facebook
+              a.text-light(href="#") 
+                i.fab.fa-twitter
+              a.text-light(href="#") 
+                i.fab.fa-instagram
+              a.text-light(href="#") 
+                i.fab.fa-linkedin
+
+          .col-md-2.mb-4
+            h6.fw-bold Quick Links
+            ul.list-unstyled
+              li
+                a.text-muted(href="/") Home
+              li
+                a.text-muted(href="/books") Browse
+              li
+                a.text-muted(href="/search") Search
+              li
+                a.text-muted(href="/about") About
+
+          .col-md-2.mb-4
+            h6.fw-bold Support
+            ul.list-unstyled
+              li
+                a.text-muted(href="/faq") FAQ
+              li
+                a.text-muted(href="/contact") Contact
+              li
+                a.text-muted(href="/support") Support
+              li
+                a.text-muted(href="/terms") Terms
+
+          .col-md-4.mb-4
+            h6.fw-bold Newsletter
+            p.text-muted Subscribe to get updates on new releases
+            .input-group
+              input.form-control(type="email" placeholder="Your email")
+              button.btn.btn-primary(type="button")
+                i.fas.fa-paper-plane
+
+        hr.bg-secondary
+        .row
+          .col-md-6
+            p.text-muted.mb-0 &copy; 2025 Bookify. All rights reserved.
+          .col-md-6.text-end
+            a.text-muted.me-3(href="/privacy") Privacy Policy
+            a.text-muted(href="/cookies") Cookie Policy
+
+    // SCRIPTS
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")
+    script(src="/scripts/main.js")
+    block scripts

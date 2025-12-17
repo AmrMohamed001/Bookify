@@ -1,0 +1,107 @@
+extends layout
+
+block content
+  .profile-edit-container.py-4
+    .container(style="max-width: 800px;")
+      
+      // BREADCRUMB
+      nav(aria-label="breadcrumb")
+        ol.breadcrumb
+          li.breadcrumb-item
+            a(href="/profile") Profile
+          li.breadcrumb-item.active Edit Profile
+
+      h1.fw-bold.mb-4 Edit Profile
+
+      .modern-card.p-4
+        form#profileForm
+          // AVATAR
+          .text-center.mb-4
+            img.profile-avatar.mb-3(
+              src=`https://i.pravatar.cc/150?u=${user._id}`
+              alt="Profile"
+              style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-light);"
+            )
+            .mt-2
+              label.pill-btn.pill-btn-outline.btn-sm(for="avatarInput" style="cursor: pointer;")
+                i.fas.fa-camera.me-2
+                | Change Photo
+              input#avatarInput(type="file" accept="image/*" style="display: none;")
+
+          .row.g-3
+            .col-md-6
+              label.form-label.fw-bold First Name
+              input.form-control(
+                type="text"
+                name="firstName"
+                value=user.firstName
+                required
+              )
+
+            .col-md-6
+              label.form-label.fw-bold Last Name
+              input.form-control(
+                type="text"
+                name="lastName"
+                value=user.lastName
+                required
+              )
+
+            .col-12
+              label.form-label.fw-bold Email
+              input.form-control(
+                type="email"
+                name="email"
+                value=user.email
+                disabled
+              )
+              small.text-muted Email cannot be changed
+
+            .col-md-6
+              label.form-label.fw-bold Phone
+              input.form-control(
+                type="tel"
+                name="phone"
+                value=user.phone || ''
+                placeholder="+1 (555) 123-4567"
+              )
+
+            .col-12
+              label.form-label.fw-bold Bio
+              textarea.form-control(
+                name="bio"
+                rows="4"
+                placeholder="Tell us about yourself..."
+              )= user.bio || ''
+
+          .d-flex.gap-2.justify-content-end.mt-4
+            a.pill-btn.pill-btn-outline(href="/profile") Cancel
+            button.pill-btn.pill-btn-primary(type="submit")
+              i.fas.fa-save.me-2
+              | Save Changes
+
+block scripts
+  script.
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      try {
+        const data = await apiFetch('/api/v1/users/me', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            phone: formData.get('phone'),
+            bio: formData.get('bio'),
+          })
+        });
+        
+        showToast('Profile updated successfully!', 'success');
+        setTimeout(() => window.location.href = '/profile', 1500);
+      } catch (error) {
+        showToast(error.message, 'danger');
+      }
+    });

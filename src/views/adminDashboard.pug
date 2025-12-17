@@ -1,0 +1,210 @@
+extends layout
+
+block content
+  .admin-dashboard.py-4
+    .container-fluid.px-4
+
+      .row.mb-4
+        .col
+          h1.fw-bold Admin Dashboard
+          p.text-muted Platform management & analytics
+
+      // STATS
+      .row.g-3.mb-4
+        .col-md-3
+          .stat-card.bg-white.p-4.rounded.shadow-sm
+            .d-flex.align-items-center.justify-content-between
+              .stat-info
+                p.text-muted.small Total Users
+                h3.fw-bold= stats?.totalUsers || 0
+                p.text-success.small +12% this month
+              i.fas.fa-users.text-primary.display-4.opacity-50
+
+        .col-md-3
+          .stat-card.bg-white.p-4.rounded.shadow-sm
+            .d-flex.align-items-center.justify-content-between
+              .stat-info
+                p.text-muted.small Total Books
+                h3.fw-bold= stats?.totalBooks || 0
+                p.text-success.small +8 this week
+              i.fas.fa-book.text-info.display-4.opacity-50
+
+        .col-md-3
+          .stat-card.bg-white.p-4.rounded.shadow-sm
+            .d-flex.align-items-center.justify-content-between
+              .stat-info
+                p.text-muted.small Total Revenue
+                h3.fw-bold= `$${stats?.totalRevenue?.toFixed(0) || '0'}`
+                p.text-success.small +25% this month
+              i.fas.fa-dollar-sign.text-success.display-4.opacity-50
+
+        .col-md-3
+          .stat-card.bg-white.p-4.rounded.shadow-sm
+            .d-flex.align-items-center.justify-content-between
+              .stat-info
+                p.text-muted.small Pending Approvals
+                h3.fw-bold= stats?.pendingApprovals || 0
+                p.text-warning.small Action required
+              i.fas.fa-hourglass-end.text-warning.display-4.opacity-50
+
+      // MAIN GRID
+      .row.g-4
+        // LEFT COLUMN
+        .col-lg-8
+          // PENDING BOOKS
+          .section.bg-white.rounded.shadow-sm.p-4.mb-4
+            .d-flex.justify-content-between.align-items-center.mb-4
+              h5.fw-bold Pending Book Approvals
+              a.btn.btn-sm.btn-outline-primary(href="/admin/books?status=pending") View All
+
+            if pendingBooks && pendingBooks.length > 0
+              .table-responsive
+                table.table.table-hover.mb-0
+                  thead
+                    tr.border-bottom
+                      th Book Title
+                      th Author
+                      th Submitted
+                      th Status
+                      th Action
+                  tbody
+                    each book in pendingBooks.slice(0, 5)
+                      tr
+                        td
+                          strong.text-truncate(style="max-width: 200px;")= book.title
+                        td= book.author.name
+                        td= new Date(book.createdAt).toLocaleDateString()
+                        td
+                          span.badge.bg-warning Pending
+                        td
+                          button.btn.btn-sm.btn-outline-success(onclick=`approveBook('${book._id}')`
+                            | ✓ Approve
+                          button.btn.btn-sm.btn-outline-danger.ms-1(onclick=`rejectBook('${book._id}')`
+                            | ✗ Reject
+            else
+              p.text-muted.text-center.py-4 All books approved!
+
+          // RECENT ORDERS
+          .section.bg-white.rounded.shadow-sm.p-4
+            .d-flex.justify-content-between.align-items-center.mb-4
+              h5.fw-bold Recent Orders
+              a.btn.btn-sm.btn-outline-primary(href="/admin/orders") View All
+
+            if recentOrders && recentOrders.length > 0
+              .table-responsive
+                table.table.table-hover.mb-0
+                  thead
+                    tr.border-bottom
+                      th Order #
+                      th Customer
+                      th Amount
+                      th Status
+                      th Action
+                  tbody
+                    each order in recentOrders.slice(0, 5)
+                      tr
+                        td
+                          strong= `#${order.orderNumber}`
+                        td= order.user.firstName + ' ' + order.user.lastName
+                        td.fw-bold= `$${order.pricing.total.toFixed(2)}`
+                        td
+                          span(class=`badge bg-${order.fulfillment.status === 'delivered' ? 'success' : 'warning'}`)
+                            = order.fulfillment.status
+                        td
+                          a.btn.btn-sm.btn-outline-primary(href=`/admin/order/${order._id}`) View
+            else
+              p.text-muted.text-center.py-4 No recent orders
+
+        // RIGHT COLUMN
+        .col-lg-4
+          // QUICK ACTIONS
+          .section.bg-white.rounded.shadow-sm.p-4.mb-4
+            h5.fw-bold.mb-3 Quick Actions
+            .d-grid.gap-2
+              a.btn.btn-primary(href="/admin/users")
+                i.fas.fa-users.me-2
+                | Manage Users
+              a.btn.btn-primary(href="/admin/books")
+                i.fas.fa-book.me-2
+                | Manage Books
+              a.btn.btn-primary(href="/admin/orders")
+                i.fas.fa-receipt.me-2
+                | Manage Orders
+              a.btn.btn-primary(href="/admin/reports")
+                i.fas.fa-chart-bar.me-2
+                | View Reports
+
+          // RECENT USERS
+          .section.bg-white.rounded.shadow-sm.p-4
+            h6.fw-bold.mb-3 New Users
+            each user in recentUsers || []
+              .user-item.pb-3.mb-3.border-bottom
+                .d-flex.align-items-center.justify-content-between
+                  .d-flex.align-items-center
+                    img.rounded-circle.me-2(
+                      src=`https://i.pravatar.cc/32?u=${user._id}`
+                      alt=user.firstName
+                    )
+                    .user-info
+                      p.mb-0.small.fw-bold= `${user.firstName} ${user.lastName}`
+                      p.mb-0.text-muted.small= user.email
+                  span.badge.bg-info= user.role
+
+block styles
+  style.
+    .stat-card {
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+    }
+    .section {
+      border: 1px solid #e0e0e0;
+    }
+    .user-item {
+      border-color: #e0e0e0 !important;
+    }
+    .user-item:last-child {
+      border-bottom: none !important;
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+block scripts
+  script.
+    function approveBook(bookId) {
+      if (!confirm('Approve this book?')) return;
+      fetch(`/api/v1/admin/books/${bookId}/approve`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('Error approving book');
+        }
+      });
+    }
+
+    function rejectBook(bookId) {
+      const reason = prompt('Enter rejection reason:');
+      if (!reason) return;
+      
+      fetch(`/api/v1/admin/books/${bookId}/reject`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rejectionReason: reason })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('Error rejecting book');
+        }
+      });
+    }

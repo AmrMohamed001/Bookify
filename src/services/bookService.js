@@ -189,6 +189,15 @@ exports.updateBook = async (
   }
 
   Object.assign(book, updateData);
+
+  // Auto-enable physical availability if stock > 0
+  if (
+    book.pricing?.physical?.stock > 0 &&
+    book.pricing.physical.isAvailable === false
+  ) {
+    book.pricing.physical.isAvailable = true;
+  }
+
   await book.save();
 
   return book;

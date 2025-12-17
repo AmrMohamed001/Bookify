@@ -52,6 +52,15 @@ exports.getOne = async (filter, populateBooks = false) => {
 };
 
 exports.create = async revBody => {
+  const existingReview = await Review.findOne({
+    bookId: revBody.bookId,
+    userId: revBody.userId,
+  });
+
+  if (existingReview) {
+    throw new AppError(400, 'You have already reviewed this book');
+  }
+
   return await Review.create(revBody);
 };
 

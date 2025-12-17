@@ -1,0 +1,157 @@
+extends layout
+
+block content
+  .orders-container.py-4
+    .container
+
+      .row.mb-4
+        .col-md-8
+          h1.fw-bold.mb-2 Order History
+          p.text-muted Track and manage your purchases
+
+        .col-md-4.text-end
+          .pill-tabs
+            a.pill-tab.active(href="/orders") All
+            a.pill-tab(href="/orders?status=pending") Pending
+            a.pill-tab(href="/orders?status=delivered") Delivered
+
+      if orders && orders.length > 0
+        .orders-list
+          each order in orders
+            .order-history-card.animate-fade-in-up
+              .order-header
+                .order-info
+                  h5.order-id.mb-1 Order ##{order.orderNumber}
+                  p.order-date.mb-0
+                    i.far.fa-calendar-alt.me-2
+                    = new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                .order-status
+                  - const statusClass = order.fulfillment.status === 'delivered' ? 'badge-delivered' : order.fulfillment.status === 'shipped' ? 'badge-shipped' : order.fulfillment.status === 'processing' ? 'badge-processing' : order.fulfillment.status === 'cancelled' ? 'badge-cancelled' : 'badge-pending'
+                  span.badge-status(class=statusClass)
+                    if order.fulfillment.status === 'delivered'
+                      i.fas.fa-check-circle.me-1
+                    else if order.fulfillment.status === 'shipped'
+                      i.fas.fa-truck.me-1
+                    else if order.fulfillment.status === 'processing'
+                      i.fas.fa-sync-alt.me-1
+                    else if order.fulfillment.status === 'cancelled'
+                      i.fas.fa-times-circle.me-1
+                    else
+                      i.fas.fa-clock.me-1
+                    = order.fulfillment.status
+
+              // ORDER ITEMS
+              .order-items.mb-3
+                each item in order.items
+                  .order-item-row
+                    if item.book && item.book.coverImage && item.book.coverImage.url
+                      img.order-item-thumbnail(
+                        src=item.book.coverImage.url
+                        alt=item.title
+                      )
+                    else
+                      .order-item-thumbnail.d-flex.align-items-center.justify-content-center(style="background-color: #e5e7eb;")
+                        i.fas.fa-book(style="font-size: 24px; color: #999;")
+                    .order-item-info
+                      h6.order-item-title= item.title
+                      .d-flex.align-items-center.gap-2
+                        span.badge-format(class=item.format === 'digital' ? 'badge-digital' : 'badge-physical')
+                          if item.format === 'digital'
+                            i.fas.fa-tablet-alt.me-1
+                          else
+                            i.fas.fa-book.me-1
+                          = item.format
+                        if item.quantity > 1
+                          span.text-muted.small × #{item.quantity}
+                    .order-item-price
+                      strong= `$${(item.price * item.quantity).toFixed(2)}`
+
+              // ORDER SUMMARY
+              .row.g-3.mb-3.py-3.border-top
+                .col-md-3
+                  p.text-muted.small.mb-0 Subtotal
+                  strong= `$${order.pricing.subtotal.toFixed(2)}`
+
+                .col-md-3
+                  p.text-muted.small.mb-0 Shipping
+                  strong= `$${(order.pricing.shipping || 0).toFixed(2)}`
+
+                .col-md-3
+                  p.text-muted.small.mb-0 Tax
+                  strong= `$${(order.pricing.tax || 0).toFixed(2)}`
+
+                .col-md-3.text-end.border-start
+                  p.text-muted.small.mb-0 Total
+                  h5.fw-bold.mb-0(style="color: var(--primary-color);")= `$${order.pricing.total.toFixed(2)}`
+
+              // ACTIONS
+              .d-flex.gap-2.justify-content-end.pt-3.border-top
+                if order.fulfillment.status === 'shipped' && order.fulfillment.trackingNumber
+                  a.pill-btn.pill-btn-outline.btn-sm(href=`/order/${order._id}/track`)
+                    i.fas.fa-location-dot.me-1
+                    | Track Shipment
+
+                a.pill-btn.pill-btn-outline.btn-sm(href=`/order/${order._id}`)
+                  i.fas.fa-eye.me-1
+                  | View Details
+
+                if order.invoice && order.invoice.url
+                  a.pill-btn.pill-btn-outline.btn-sm(href=order.invoice.url download)
+                    i.fas.fa-file-pdf.me-1
+                    | Invoice
+
+                if order.fulfillment.status === 'pending'
+                  button.pill-btn.btn-sm(type="button" onclick=`cancelOrder('${order._id}')` style="background-color: #fee2e2; color: #991b1b; border: none;")
+                    i.fas.fa-times.me-1
+                    | Cancel
+
+      else
+        .empty-orders.text-center.py-5
+          .mb-4
+            i.fas.fa-receipt(style="font-size: 80px; color: var(--primary-color); opacity: 0.3;")
+          h4.fw-bold.mb-2 No orders yet
+          p.text-muted.mb-4 Start shopping to see your orders here
+          a.pill-btn.pill-btn-primary.btn-lg(href="/books") 
+            i.fas.fa-shopping-bag.me-2
+            | Browse Books
+
+block styles
+  style.
+    .order-history-card {
+      margin-bottom: 1.5rem;
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .order-item-price {
+      font-size: 1rem;
+    }
+    @media (max-width: 768px) {
+      .order-header {
+        flex-direction: column;
+      }
+      .order-item-row {
+        flex-wrap: wrap;
+      }
+    }
+
+block scripts
+  script.
+    async function cancelOrder(orderId) {
+      if (!confirm('Are you sure you want to cancel this order?')) return;
+      
+      try {
+        const response = await apiFetch(`/api/v1/orders/${orderId}/cancel`, {
+          method: 'PATCH'
+        });
+        
+        showToast('Order cancelled successfully', 'success');
+        location.reload();
+      } catch (error) {
+        showToast(error.message, 'danger');
+      }
+    }

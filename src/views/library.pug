@@ -1,0 +1,151 @@
+extends layout
+
+block content
+  .library-container.py-4
+    .container-fluid.px-4
+
+      .row.mb-4
+        .col-md-8
+          h1.fw-bold My Library
+          p.text-muted All your purchased books in one place
+
+        .col-md-4.text-end
+          .input-group.input-group-sm
+            input.form-control(type="text" placeholder="Search your library..." id="librarySearch")
+            button.btn.btn-outline-secondary(type="button")
+              i.fas.fa-search
+
+      // FILTERS & SORT
+      .row.mb-4
+        .col-md-6
+          .d-flex.gap-2
+            select.form-select.form-select-sm.w-auto(name="sort")
+              option(value="recent") Recently Added
+              option(value="title") By Title
+              option(value="author") By Author
+              option(value="progress") Reading Progress
+        .col-md-6.text-end
+          .btn-group.btn-group-sm(role="group")
+            input.btn-check(type="radio" name="view" id="gridView" value="grid" checked)
+            label.btn.btn-outline-secondary(for="gridView")
+              i.fas.fa-th
+            input.btn-check(type="radio" name="view" id="listView" value="list")
+            label.btn.btn-outline-secondary(for="listView")
+              i.fas.fa-list
+
+      if books && books.length > 0
+        // GRID VIEW
+        .library-grid.row.g-4
+          each book in books
+            .col-lg-3.col-md-4.col-sm-6
+              .library-book-card.h-100.bg-white.rounded.shadow-sm.overflow-hidden
+                .position-relative
+                  img.w-100(src=book.coverImage.url alt=book.title style="height: 280px; object-fit: cover;")
+                  
+                  if book.readingProgress
+                    .progress-bar-overlay
+                      .progress(style="height: 3px;")
+                        .progress-bar.bg-primary(role="progressbar" style=`width: ${book.readingProgress}%`)
+
+                  .book-actions
+                    a.btn.btn-primary.btn-sm(href=`/reader/${book._id}`)
+                      i.fas.fa-book-reader
+                      |  Read
+
+                .p-3
+                  h6.fw-bold.text-truncate= book.title
+                  p.text-muted.small.text-truncate by #{book.author.name}
+
+                  if book.readingProgress
+                    .reading-progress.mt-2
+                      .d-flex.justify-content-between.align-items-center.mb-2
+                        small.text-muted Reading
+                        small.text-muted= `${book.readingProgress}%`
+                      .progress(style="height: 4px;")
+                        .progress-bar.bg-success(role="progressbar" style=`width: ${book.readingProgress}%`)
+
+                  .d-flex.justify-content-between.align-items-center.mt-3
+                    small.text-muted= book.dateAdded
+                    .dropdown
+                      button.btn.btn-sm.btn-light(data-bs-toggle="dropdown")
+                        i.fas.fa-ellipsis-v
+                      ul.dropdown-menu.dropdown-menu-end
+                        li
+                          a.dropdown-item(href=`/book/${book._id}`) View Details
+                        li
+                          a.dropdown-item(href=`/reader/${book._id}`) Continue Reading
+                        li
+                          hr.dropdown-divider
+                        li
+                          a.dropdown-item.text-danger(href="#") Remove from Library
+
+      else
+        // EMPTY STATE
+        .empty-library.text-center.py-5
+          i.fas.fa-book.display-1.text-muted.mb-3.d-block
+          h4.fw-bold Your library is empty
+          p.text-muted.mb-4 Start purchasing books to build your digital library
+          a.btn.btn-primary.btn-lg(href="/books") Browse Books
+
+block styles
+  style.
+    .library-book-card {
+      transition: all 0.3s ease;
+      border: none;
+      position: relative;
+    }
+    .library-book-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    }
+    .library-book-card:hover .book-actions {
+      opacity: 1;
+    }
+    .book-actions {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .progress-bar-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+    .reading-progress {
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+    }
+
+block scripts
+  script.
+    document.getElementById('librarySearch').addEventListener('keyup', (e) => {
+      const query = e.target.value.toLowerCase();
+      const cards = document.querySelectorAll('.library-book-card');
+      cards.forEach(card => {
+        const title = card.querySelector('h6').textContent.toLowerCase();
+        const author = card.querySelector('.text-muted').textContent.toLowerCase();
+        card.parentElement.style.display = 
+          title.includes(query) || author.includes(query) ? '' : 'none';
+      });
+    });
+
+    document.querySelector('[name="sort"]').addEventListener('change', (e) => {
+      // Sort logic here
+    });
+
+    document.getElementById('gridView').addEventListener('change', () => {
+      document.querySelector('.library-grid').classList.remove('list-view');
+    });
+
+    document.getElementById('listView').addEventListener('change', () => {
+      document.querySelector('.library-grid').classList.add('list-view');
+    });

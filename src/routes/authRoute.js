@@ -8,7 +8,7 @@ const {
   emailVerificationLimiter,
 } = require('../middlewares/rateLimiter');
 
-router.post('/signup' /*, authLimiter*/, controller.signup);
+router.post('/register' /*, authLimiter*/, controller.signup);
 router.get('/verify-email', controller.verifyEmail);
 router.post(
   '/resend-verification',

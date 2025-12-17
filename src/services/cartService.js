@@ -185,7 +185,18 @@ exports.removeFromCart = async (userId, itemId) => {
 };
 
 exports.clearCart = async userId => {
-  const cart = await Cart.findOneAndUpdate(
+  const cart = await Cart.findOne({ user: userId });
+
+  // Decrement coupon usage count if coupon was applied
+  if (cart && cart.coupon) {
+    const coupon = await Coupon.findById(cart.coupon);
+    if (coupon && coupon.usedCount > 0) {
+      coupon.usedCount -= 1;
+      await coupon.save();
+    }
+  }
+
+  const updatedCart = await Cart.findOneAndUpdate(
     { user: userId },
     {
       cartItems: [],
@@ -196,7 +207,7 @@ exports.clearCart = async userId => {
     { new: true }
   );
 
-  return cart;
+  return updatedCart;
 };
 
 exports.applyCouponToCart = async (userId, couponName) => {
@@ -229,6 +240,10 @@ exports.applyCouponToCart = async (userId, couponName) => {
     Math.round((cart.totalCartPrice - discountAmount) * 100) / 100;
   cart.coupon = coupon._id;
 
+  // Increment coupon usage count
+  coupon.usedCount += 1;
+  await coupon.save();
+
   await cart.save();
 
   return cart.populate(
@@ -242,6 +257,15 @@ exports.removeCouponFromCart = async userId => {
 
   if (!cart) {
     throw new AppError(404, 'Cart not found');
+  }
+
+  // Decrement coupon usage count if coupon was applied
+  if (cart.coupon) {
+    const coupon = await Coupon.findById(cart.coupon);
+    if (coupon && coupon.usedCount > 0) {
+      coupon.usedCount -= 1;
+      await coupon.save();
+    }
   }
 
   cart.totalCartPriceAfterDiscount = undefined;

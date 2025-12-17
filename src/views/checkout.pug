@@ -1,0 +1,297 @@
+extends layout
+
+block content
+  .checkout-container.py-4
+    .container
+
+      h1.fw-bold.mb-4 Checkout
+
+      .row.g-4
+        // LEFT COLUMN - FORM
+        .col-lg-8
+          // STEP 1: SHIPPING ADDRESS
+          .modern-card.p-4.mb-4
+            .step-header.mb-4
+              .d-flex.align-items-center.gap-3
+                .step-number.rounded-circle(style="background-color: var(--primary-color); color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;")
+                  strong 1
+                h5.fw-bold.mb-0 Shipping Address
+
+            // SAVED ADDRESSES
+            if addresses && addresses.length > 0
+              .saved-addresses.mb-4
+                h6.fw-bold.mb-3 Select a saved address
+                .row.g-3
+                  each addr, index in addresses
+                    .col-md-6
+                      .form-check.address-card.p-3.rounded.border(style="cursor: pointer;")
+                        input.form-check-input(
+                          type="radio"
+                          name="savedAddress"
+                          id=`addr-${addr._id}`
+                          value=addr._id
+                          checked=(index === 0 || addr.isDefault)
+                        )
+                        label.form-check-label.ms-2(for=`addr-${addr._id}` style="cursor: pointer;")
+                          strong= addr.label || 'Address'
+                          p.mb-0.small.text-muted= `${addr.street}, ${addr.city}`
+                          p.mb-0.small.text-muted= `${addr.state} ${addr.zipCode}, ${addr.country}`
+                
+                .mt-3
+                  a.text-muted.small(href="/addresses") 
+                    i.fas.fa-plus.me-1
+                    | Add new address
+
+            else
+              // NEW ADDRESS FORM
+              .alert.alert-info.mb-3
+                i.fas.fa-info-circle.me-2
+                | You don't have any saved shipping addresses. Please add one below.
+              
+              form#shippingForm
+                .row.g-3
+                  .col-12
+                    label.form-label Street Address
+                    input.form-control.pill-input(
+                      type="text"
+                      name="street"
+                      placeholder="123 Main St"
+                      required
+                      style="border-radius: 8px;"
+                    )
+
+                  .col-md-6
+                    label.form-label City
+                    input.form-control(
+                      type="text"
+                      name="city"
+                      placeholder="New York"
+                      required
+                    )
+
+                  .col-md-3
+                    label.form-label State
+                    input.form-control(
+                      type="text"
+                      name="state"
+                      placeholder="NY"
+                      required
+                    )
+
+                  .col-md-3
+                    label.form-label ZIP Code
+                    input.form-control(
+                      type="text"
+                      name="zipCode"
+                      placeholder="10001"
+                      required
+                    )
+
+                  .col-12
+                    label.form-label Country
+                    select.form-select(name="country" required)
+                      option(value="") Select country
+                      option(value="US" selected) United States
+                      option(value="CA") Canada
+                      option(value="GB") United Kingdom
+                      option(value="AU") Australia
+                      option(value="EG") Egypt
+
+          // STEP 2: PAYMENT METHOD
+          .modern-card.p-4.mb-4
+            .step-header.mb-4
+              .d-flex.align-items-center.gap-3
+                .step-number.rounded-circle(style="background-color: var(--primary-color); color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;")
+                  strong 2
+                h5.fw-bold.mb-0 Payment Method
+
+            .payment-methods
+              .form-check.payment-option.mb-3.p-3.rounded.border
+                input.form-check-input(type="radio" name="paymentMethod" value="stripe" id="stripe" checked)
+                label.form-check-label.ms-2(for="stripe")
+                  .d-flex.align-items-center.gap-2
+                    i.fab.fa-cc-stripe(style="font-size: 24px; color: #6772e5;")
+                    div
+                      strong Credit / Debit Card
+                      p.mb-0.small.text-muted Pay securely with Stripe
+
+              .form-check.payment-option.mb-3.p-3.rounded.border
+                input.form-check-input(type="radio" name="paymentMethod" value="paypal" id="paypal")
+                label.form-check-label.ms-2(for="paypal")
+                  .d-flex.align-items-center.gap-2
+                    i.fab.fa-paypal(style="font-size: 24px; color: #00457C;")
+                    div
+                      strong PayPal
+                      p.mb-0.small.text-muted Pay with your PayPal account
+
+              .form-check.payment-option.mb-3.p-3.rounded.border
+                input.form-check-input(type="radio" name="paymentMethod" value="cash" id="cash")
+                label.form-check-label.ms-2(for="cash")
+                  .d-flex.align-items-center.gap-2
+                    i.fas.fa-money-bill-wave(style="font-size: 24px; color: #10b981;")
+                    div
+                      strong Cash on Delivery
+                      p.mb-0.small.text-muted Pay when you receive your order
+
+          // STEP 3: REVIEW ORDER
+          .modern-card.p-4
+            .step-header.mb-4
+              .d-flex.align-items-center.gap-3
+                .step-number.rounded-circle(style="background-color: var(--primary-color); color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;")
+                  strong 3
+                h5.fw-bold.mb-0 Review Order
+
+            .order-items
+              each item in cartItems || []
+                .d-flex.align-items-center.gap-3.pb-3.mb-3.border-bottom
+                  if item.book.coverImage && item.book.coverImage.url
+                    img.rounded(src=item.book.coverImage.url alt=item.book.title style="width: 50px; height: 70px; object-fit: cover;")
+                  else
+                    .rounded.d-flex.align-items-center.justify-content-center(style="width: 50px; height: 70px; background-color: #e5e7eb;")
+                      i.fas.fa-book.text-muted
+                  .flex-grow-1
+                    h6.mb-1= item.book.title
+                    .d-flex.align-items-center.gap-2
+                      span.badge-format(class=item.format === 'digital' ? 'badge-digital' : 'badge-physical')= item.format
+                      if item.quantity > 1
+                        span.text-muted.small × #{item.quantity}
+                  span.fw-bold= `$${(item.price * item.quantity).toFixed(2)}`
+
+        // RIGHT COLUMN - ORDER SUMMARY
+        .col-lg-4
+          .modern-card.p-4.sticky-lg-top(style="top: 100px;")
+            h5.fw-bold.mb-4 Order Summary
+
+            .summary-calculations
+              .d-flex.justify-content-between.mb-2
+                span.text-muted Subtotal
+                span= `$${subtotal.toFixed(2)}`
+
+              if tax
+                .d-flex.justify-content-between.mb-2
+                  span.text-muted Tax (10%)
+                  span= `$${tax.toFixed(2)}`
+
+              if shippingCost
+                .d-flex.justify-content-between.mb-2
+                  span.text-muted Shipping
+                  span= `$${shippingCost.toFixed(2)}`
+
+              if discount
+                .d-flex.justify-content-between.mb-2.text-success
+                  span Discount
+                  span= `-$${discount.toFixed(2)}`
+
+              hr
+
+              .d-flex.justify-content-between.align-items-center.mb-4
+                h5.fw-bold.mb-0 Total
+                h4.fw-bold.mb-0(style="color: var(--primary-color);")= `$${total.toFixed(2)}`
+
+            button.pill-btn.pill-btn-primary.w-100.btn-lg(type="button" onclick="submitCheckout()" id="placeOrderBtn")
+              i.fas.fa-lock.me-2
+              | Place Order
+
+            button.pill-btn.pill-btn-outline.w-100.mt-2(type="button" onclick="history.back()")
+              | Continue Shopping
+
+            // TRUST BADGES
+            .trust-badges.mt-4.pt-4.border-top.text-center
+              .d-flex.justify-content-center.gap-4
+                .text-center
+                  i.fas.fa-shield-alt.d-block.mb-1(style="font-size: 24px; color: var(--success-color);")
+                  small.text-muted Secure
+                .text-center
+                  i.fas.fa-truck.d-block.mb-1(style="font-size: 24px; color: var(--success-color);")
+                  small.text-muted Fast Delivery
+                .text-center
+                  i.fas.fa-undo.d-block.mb-1(style="font-size: 24px; color: var(--success-color);")
+                  small.text-muted Easy Returns
+
+block styles
+  style.
+    .payment-option {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .payment-option:hover {
+      border-color: var(--primary-color) !important;
+    }
+    .payment-option input:checked + .form-check-label {
+      color: var(--primary-color);
+    }
+    .address-card {
+      transition: all 0.3s ease;
+    }
+    .address-card:hover {
+      border-color: var(--primary-color) !important;
+    }
+
+block scripts
+  script.
+    async function submitCheckout() {
+      const btn = document.getElementById('placeOrderBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+      
+      try {
+        // Get payment method
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+        if (!paymentMethod) {
+          throw new Error('Please select a payment method');
+        }
+
+        // Get shipping address ID or create new address
+        let shippingAddressId;
+        const savedAddress = document.querySelector('input[name="savedAddress"]:checked');
+        
+        if (savedAddress) {
+          shippingAddressId = savedAddress.value;
+        } else {
+          // Create new address from form
+          const form = document.getElementById('shippingForm');
+          if (!form) {
+            throw new Error('Please add a shipping address');
+          }
+          
+          const formData = new FormData(form);
+          const addressData = {
+            street: formData.get('street'),
+            city: formData.get('city'),
+            state: formData.get('state'),
+            zipCode: formData.get('zipCode'),
+            country: formData.get('country'),
+            type: 'shipping'
+          };
+          
+          // Create address first
+          const addressRes = await apiFetch('/api/v1/users/me/addresses', {
+            method: 'POST',
+            body: JSON.stringify(addressData)
+          });
+          
+          shippingAddressId = addressRes.data._id;
+        }
+
+        // Create order
+        const orderRes = await apiFetch('/api/v1/orders', {
+          method: 'POST',
+          body: JSON.stringify({
+            shippingAddressId: shippingAddressId,
+            paymentMethod: paymentMethod
+          })
+        });
+
+        showToast('Order placed successfully!', 'success');
+        
+        // Redirect to orders page
+        setTimeout(() => {
+          window.location.href = '/orders';
+        }, 1500);
+        
+      } catch (error) {
+        showToast(error.message, 'danger');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock me-2"></i>Place Order';
+      }
+    }

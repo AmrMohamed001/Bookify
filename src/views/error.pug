@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  .error-container.py-5
+    .container.text-center
+      h1.display-1.fw-bold.text-danger= status || 500
+      h3.fw-bold.mb-4= message || 'Something went wrong'
+      p.text-muted.mb-4 We're sorry, but something unexpected happened.
+      
+      .action-buttons
+        a.btn.btn-primary.me-2(href="/") Back to Home
+        a.btn.btn-outline-secondary(href="javascript:history.back()") Go Back
+
+      if error && error.stack && process.env.NODE_ENV === 'development'
+        .mt-5.text-start
+          h5.fw-bold Debug Information:
+          pre.bg-light.p-3.rounded
+            code= error.stack

@@ -1,0 +1,122 @@
+extends layout
+
+block content
+  .auth-container
+    .container
+      .row.justify-content-center
+        .col-md-5
+
+          .auth-card.bg-white.rounded.shadow-sm.p-5
+            .text-center.mb-5
+              h2.fw-bold Welcome Back
+              p.text-muted Sign in to access your Bookify account
+
+            form#loginForm(method="POST" action="/api/v1/auth/login")
+              .mb-3
+                label.form-label Email Address
+                input.form-control.form-control-lg(
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  required
+                )
+                small.text-muted We'll never share your email
+
+              .mb-3
+                label.form-label Password
+                .input-group.input-group-lg
+                  input.form-control(
+                    type="password"
+                    name="password"
+                    id="password"
+                    placeholder="••••••••"
+                    required
+                  )
+                  button.btn.btn-outline-secondary(type="button" onclick="togglePassword()")
+                    i.fas.fa-eye
+
+              .mb-3.form-check
+                input.form-check-input(type="checkbox" id="remember" name="remember")
+                label.form-check-label(for="remember") Remember me
+
+              button.btn.btn-primary.btn-lg.w-100.mb-3(type="submit") Sign In
+
+              .text-center
+                a.text-decoration-none(href="/forgot-password") Forgot your password?
+
+            hr
+
+            .social-login.mb-4
+              a.btn.btn-outline-secondary.w-100.mb-2(href="/api/v1/auth/google")
+                i.fab.fa-google.me-2
+                | Sign in with Google
+
+              button.btn.btn-outline-secondary.w-100(type="button" disabled)
+                i.fab.fa-facebook.me-2
+                | Sign in with Facebook (Coming Soon)
+
+            .text-center
+              p.text-muted
+                | Don't have an account?
+                a.ms-2(href="/register") Create one now
+
+      // ILLUSTRATION (optional - right side on larger screens)
+      .col-md-5.d-none.d-md-block
+        .auth-illustration.text-center.py-5
+          i.fas.fa-book-open.display-1.text-primary.mb-4.d-block
+          h4.fw-bold Discover Your Next Great Read
+          p.text-muted Sign in to browse, purchase, and read thousands of books
+
+block styles
+  style.
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .auth-card {
+      border: none;
+    }
+    .auth-illustration {
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .auth-container {
+        min-height: auto;
+        padding: 2rem 0;
+        background: white;
+      }
+    }
+
+block scripts
+  script.
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      delete data.remember;
+
+      try {
+        const response = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (response.ok) {
+          window.location.href = '/';
+        } else {
+          alert(result.message || 'Login failed');
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    });

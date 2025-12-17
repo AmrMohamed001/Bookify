@@ -1,0 +1,159 @@
+extends layout
+
+block content
+  .addresses-container.py-4
+    .container(style="max-width: 800px;")
+
+      h1.fw-bold.mb-2 My Addresses
+      p.text-muted.mb-4 Manage your shipping and billing addresses
+
+      // PILL TAB NAVIGATION
+      .pill-tabs.mb-4
+        a.pill-tab(href="/profile")
+          i.fas.fa-user.me-2
+          | Profile
+        a.pill-tab.active(href="/addresses")
+          i.fas.fa-map-marker-alt.me-2
+          | Addresses
+        a.pill-tab(href="/orders")
+          i.fas.fa-receipt.me-2
+          | Orders
+        a.pill-tab(href="/settings")
+          i.fas.fa-cog.me-2
+          | Security
+
+      // ADD NEW ADDRESS
+      .d-flex.justify-content-end.mb-4
+        button.pill-btn.pill-btn-primary(type="button" data-bs-toggle="modal" data-bs-target="#addAddressModal")
+          i.fas.fa-plus.me-2
+          | Add Address
+
+      // ADDRESS CARDS
+      if addresses && addresses.length > 0
+        .row.g-4
+          each addr in addresses
+            .col-md-6
+              .modern-card.p-4.h-100
+                .d-flex.justify-content-between.align-items-start.mb-3
+                  div
+                    h6.fw-bold.mb-1= addr.label || addr.type
+                    if addr.isDefault
+                      span.badge-status.badge-delivered Default
+                  .dropdown
+                    button.btn.btn-sm(type="button" data-bs-toggle="dropdown" style="border: none;")
+                      i.fas.fa-ellipsis-v
+                    ul.dropdown-menu.dropdown-menu-end
+                      li
+                        a.dropdown-item(href="#" onclick=`editAddress('${addr._id}')`)
+                          i.fas.fa-edit.me-2
+                          | Edit
+                      li
+                        a.dropdown-item.text-danger(href="#" onclick=`deleteAddress('${addr._id}')`)
+                          i.fas.fa-trash.me-2
+                          | Delete
+
+                p.mb-1= addr.street
+                p.mb-1= `${addr.city}, ${addr.state} ${addr.zipCode}`
+                p.text-muted= addr.country
+
+      else
+        .modern-card.p-5.text-center
+          i.fas.fa-map-marker-alt.mb-3(style="font-size: 48px; color: var(--primary-color); opacity: 0.5;")
+          h5.fw-bold No addresses yet
+          p.text-muted Add your first shipping address
+
+  // ADD ADDRESS MODAL
+  #addAddressModal.modal.fade(tabindex="-1")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title Add New Address
+          button.btn-close(type="button" data-bs-dismiss="modal")
+        .modal-body
+          form#addAddressForm
+            .mb-3
+              label.form-label Label (optional)
+              input.form-control(type="text" name="label" placeholder="e.g. Home, Office")
+
+            .mb-3
+              label.form-label Street Address
+              input.form-control(type="text" name="street" required)
+
+            .row.g-3.mb-3
+              .col-md-6
+                label.form-label City
+                input.form-control(type="text" name="city" required)
+              .col-md-6
+                label.form-label State
+                input.form-control(type="text" name="state" required)
+
+            .row.g-3.mb-3
+              .col-md-6
+                label.form-label ZIP Code
+                input.form-control(type="text" name="zipCode" required)
+              .col-md-6
+                label.form-label Country
+                select.form-select(name="country" required)
+                  option(value="US") United States
+                  option(value="CA") Canada
+                  option(value="GB") United Kingdom
+                  option(value="EG") Egypt
+
+            .form-check
+              input.form-check-input(type="checkbox" name="isDefault" id="isDefault")
+              label.form-check-label(for="isDefault") Set as default address
+
+        .modal-footer
+          button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancel
+          button.pill-btn.pill-btn-primary(type="submit" form="addAddressForm")
+            i.fas.fa-save.me-2
+            | Save Address
+
+block scripts
+  script.
+    document.getElementById('addAddressForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      try {
+        await apiFetch('/api/v1/users/me/addresses', {
+          method: 'POST',
+          body: JSON.stringify({
+            label: formData.get('label'),
+            street: formData.get('street'),
+            city: formData.get('city'),
+            state: formData.get('state'),
+            zipCode: formData.get('zipCode'),
+            country: formData.get('country'),
+            type: 'shipping',
+            isDefault: formData.get('isDefault') === 'on'
+          })
+        });
+        
+        showToast('Address added successfully!', 'success');
+        location.reload();
+      } catch (error) {
+        showToast(error.message, 'danger');
+      }
+    });
+
+    async function deleteAddress(addressId) {
+      if (!confirm('Are you sure you want to delete this address?')) return;
+      
+      try {
+        await apiFetch(`/api/v1/users/me/addresses/${addressId}`, {
+          method: 'DELETE'
+        });
+        showToast('Address deleted', 'success');
+        location.reload();
+      } catch (error) {
+        showToast(error.message, 'danger');
+      }
+    }
+
+    function editAddress(addressId) {
+      // Would open edit modal
+      showToast('Edit functionality coming soon', 'info');
+    }
