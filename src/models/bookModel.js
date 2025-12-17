@@ -126,7 +126,7 @@ const bookSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ['draft', 'pending', 'approved', 'rejected', 'unpublished'],
-      default: 'draft',
+      default: 'pending',
       index: true,
     },
     adminReview: {

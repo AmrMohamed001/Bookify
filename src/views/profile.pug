@@ -1,0 +1,173 @@
+extends layout
+
+block content
+  .profile-container.py-4
+    .container
+
+      // HEADER
+      .row.mb-4
+        .col-md-8
+          h1.fw-bold.mb-2 My Account
+          p.text-muted Manage your profile, orders, and preferences
+
+      // PILL TAB NAVIGATION
+      .pill-tabs.mb-4
+        a.pill-tab.active(href="/profile")
+          i.fas.fa-user.me-2
+          | Profile
+        a.pill-tab(href="/addresses")
+          i.fas.fa-map-marker-alt.me-2
+          | Addresses
+        a.pill-tab(href="/orders")
+          i.fas.fa-receipt.me-2
+          | Orders
+        a.pill-tab(href="/settings")
+          i.fas.fa-cog.me-2
+          | Security
+
+      .row.g-4
+        // SIDEBAR - AVATAR CARD
+        .col-lg-4
+          .profile-avatar-card.sticky-lg-top(style="top: 100px;")
+            img.profile-avatar(
+              src=`https://i.pravatar.cc/150?u=${user._id}`
+              alt=user.firstName
+            )
+            h4.fw-bold.mb-1= `${user.firstName} ${user.lastName}`
+            p.text-muted.mb-3= user.email
+            
+            // ROLE BADGE
+            if user.role
+              span.profile-role-badge(class=user.role)
+                if user.role === 'admin'
+                  i.fas.fa-shield-alt.me-1
+                else if user.role === 'author'
+                  i.fas.fa-pen.me-1
+                else
+                  i.fas.fa-book-reader.me-1
+                = user.role.charAt(0).toUpperCase() + user.role.slice(1)
+
+            // EMAIL VERIFIED BADGE
+            if user.emailVerified
+              .mt-3
+                span.badge-status.badge-delivered
+                  i.fas.fa-check-circle.me-1
+                  | Email Verified
+
+          // QUICK STATS CARD
+          .modern-card.mt-4.p-4
+            h6.fw-bold.mb-3 Quick Stats
+            .row.g-3
+              .col-6
+                .text-center
+                  i.fas.fa-heart.mb-2.d-block(style="font-size: 24px; color: #ef4444;")
+                  h5.fw-bold.mb-0= wishlistCount || 0
+                  small.text-muted Wishlist
+              .col-6
+                .text-center
+                  i.fas.fa-shopping-cart.mb-2.d-block(style="font-size: 24px; color: var(--primary-color);")
+                  h5.fw-bold.mb-0= cartCount || 0
+                  small.text-muted Cart
+              .col-6
+                .text-center
+                  i.fas.fa-star.mb-2.d-block(style="font-size: 24px; color: #f59e0b;")
+                  h5.fw-bold.mb-0= reviewCount || 0
+                  small.text-muted Reviews
+              .col-6
+                .text-center
+                  i.fas.fa-book.mb-2.d-block(style="font-size: 24px; color: #3b82f6;")
+                  h5.fw-bold.mb-0= booksOwned || 0
+                  small.text-muted Library
+
+        // MAIN CONTENT
+        .col-lg-8
+          // PERSONAL INFORMATION
+          .modern-card.p-4.mb-4
+            .d-flex.justify-content-between.align-items-center.mb-4
+              h5.fw-bold.mb-0 Personal Information
+              a.pill-btn.pill-btn-outline.btn-sm(href="/profile/edit")
+                i.fas.fa-edit.me-1
+                | Edit
+
+            .row.g-4
+              .col-md-6
+                label.form-label.fw-bold.small First Name
+                p.mb-0= user.firstName || 'Not provided'
+
+              .col-md-6
+                label.form-label.fw-bold.small Last Name
+                p.mb-0= user.lastName || 'Not provided'
+
+              .col-md-6
+                label.form-label.fw-bold.small Email
+                .d-flex.align-items-center.gap-2
+                  p.mb-0= user.email
+                  if user.emailVerified
+                    span.badge-status.badge-delivered(style="font-size: 0.625rem;")
+                      i.fas.fa-check.me-1
+                      | Verified
+
+              .col-md-6
+                label.form-label.fw-bold.small Phone
+                p.mb-0= user.phone || 'Not provided'
+
+              .col-12
+                label.form-label.fw-bold.small Bio
+                p.mb-0.text-muted= user.bio || 'No bio added yet. Tell us about yourself!'
+
+          // ACCOUNT DETAILS
+          .modern-card.p-4.mb-4
+            h5.fw-bold.mb-4 Account Details
+
+            .row.g-4
+              .col-md-6
+                label.form-label.fw-bold.small Member Since
+                p.mb-0= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+
+              .col-md-6
+                label.form-label.fw-bold.small Account Age
+                - const days = Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24))
+                p.mb-0 #{days} days
+
+              .col-md-6
+                label.form-label.fw-bold.small Account Type
+                p.mb-0
+                  span.profile-role-badge(class=user.role)= user.role.charAt(0).toUpperCase() + user.role.slice(1)
+
+              .col-md-6
+                label.form-label.fw-bold.small Last Login
+                p.mb-0= user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'N/A'
+
+          // QUICK ACTIONS
+          .modern-card.p-4
+            h5.fw-bold.mb-4 Quick Actions
+
+            .row.g-3
+              .col-md-6
+                a.btn.w-100.d-flex.align-items-center.gap-2(href="/wishlist" style="background-color: var(--light-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 1rem;")
+                  i.fas.fa-heart(style="color: #ef4444;")
+                  span View Wishlist
+                  span.ms-auto.badge.bg-primary= wishlistCount || 0
+
+              .col-md-6
+                a.btn.w-100.d-flex.align-items-center.gap-2(href="/cart" style="background-color: var(--light-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 1rem;")
+                  i.fas.fa-shopping-cart(style="color: var(--primary-color);")
+                  span View Cart
+                  span.ms-auto.badge.bg-primary= cartCount || 0
+
+              .col-md-6
+                a.btn.w-100.d-flex.align-items-center.gap-2(href="/orders" style="background-color: var(--light-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 1rem;")
+                  i.fas.fa-receipt(style="color: #3b82f6;")
+                  span Order History
+
+              .col-md-6
+                a.btn.w-100.d-flex.align-items-center.gap-2(href="/library" style="background-color: var(--light-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 1rem;")
+                  i.fas.fa-book(style="color: #10b981;")
+                  span My Library
+                  span.ms-auto.badge.bg-success= booksOwned || 0
+
+block styles
+  style.
+    .profile-avatar-card .profile-role-badge {
+      margin-top: 0.5rem;
+    }

@@ -28,11 +28,14 @@ const hashToken = token => {
 // #endregion
 
 exports.register = async userData => {
+  // Handle both confirmPassword (from forms) and passwordConfirm (from API)
+  const passwordConfirm = userData.passwordConfirm || userData.confirmPassword;
+
   // Create new user
   const user = await User.create({
     email: userData.email,
     password: userData.password,
-    passwordConfirm: userData.passwordConfirm,
+    passwordConfirm: passwordConfirm,
     firstName: userData.firstName,
     lastName: userData.lastName,
   });
@@ -67,7 +70,8 @@ exports.register = async userData => {
 
   return {
     user,
-    message: 'Registration successful! Please check your email to verify your account.',
+    message:
+      'Registration successful! Please check your email to verify your account.',
   };
 };
 
@@ -275,7 +279,12 @@ exports.resetPassword = async (token, newPassword, passwordConfirm) => {
   };
 };
 
-exports.updatePassword = async (userId, currentPassword, newPassword, passwordConfirm) => {
+exports.updatePassword = async (
+  userId,
+  currentPassword,
+  newPassword,
+  passwordConfirm
+) => {
   // 1) Get user with password field
   const user = await User.findById(userId).select('+password');
 
@@ -290,7 +299,10 @@ exports.updatePassword = async (userId, currentPassword, newPassword, passwordCo
 
   // 3) Check if new password is different from current
   if (currentPassword === newPassword) {
-    throw new AppError(400, 'New password must be different from current password');
+    throw new AppError(
+      400,
+      'New password must be different from current password'
+    );
   }
 
   // 4) Update password
@@ -363,8 +375,7 @@ exports.resendVerificationEmail = async email => {
   };
 };
 
-
-exports.googleAuth = async (userFromPassport) => {
+exports.googleAuth = async userFromPassport => {
   // Refetch user to avoid "parallel save" error
   const user = await User.findById(userFromPassport._id);
 
@@ -395,5 +406,3 @@ exports.googleAuth = async (userFromPassport) => {
     refreshToken,
   };
 };
-
-

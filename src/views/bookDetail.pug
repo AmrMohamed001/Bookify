@@ -1,0 +1,356 @@
+extends layout
+
+block content
+  .book-detail-container.py-4
+    .container
+
+      // BREADCRUMB
+      nav(aria-label="breadcrumb")
+        ol.breadcrumb
+          li.breadcrumb-item
+            a(href="/") Home
+          li.breadcrumb-item
+            a(href="/books") Books
+          li.breadcrumb-item.active= book.title
+
+      // MAIN CONTENT
+      .row.g-5
+        // BOOK IMAGE & ACTIONS
+        .col-lg-4
+          .book-detail-image.sticky-lg-top(style="top: 100px;")
+            img.img-fluid.rounded.shadow-sm(
+              src=book.coverImage && book.coverImage.url ? book.coverImage.url : 'https://via.placeholder.com/300x400?text=No+Cover'
+              alt=book.title
+              style="width: 100%;"
+            )
+            
+            .action-buttons.mt-4.d-grid.gap-2
+              button.btn.btn-primary.btn-lg(type="button" data-bs-toggle="modal" data-bs-target="#purchaseModal")
+                i.fas.fa-shopping-cart
+                |  Add to Cart
+              
+              button.btn.btn-outline-primary.btn-lg(type="button" onclick=`addToWishlist('${book._id}')`)
+                i.fas.fa-heart
+                |  Add to Wishlist
+
+              if user && user.role === 'admin'
+                button.btn.btn-outline-secondary.btn-lg(type="button" data-bs-toggle="modal" data-bs-target="#editModal")
+                  i.fas.fa-edit
+                  |  Edit Book
+
+            // BOOK INFO CARD
+            .info-card.bg-light.p-4.rounded.mt-4
+              .info-item.mb-3
+                span.text-muted Format:
+                br
+                if book.pricing.digital.isAvailable
+                  span.badge.bg-success Digital
+                if book.pricing.physical.isAvailable
+                  span.badge.bg-info Physical
+
+              .info-item.mb-3
+                span.text-muted Language:
+                br
+                strong= book.metadata.language || 'English'
+
+              .info-item.mb-3
+                span.text-muted Pages:
+                br
+                strong= book.metadata.pageCount || 'N/A'
+
+              .info-item
+                span.text-muted Published:
+                br
+                strong= new Date(book.metadata.publishedDate).toLocaleDateString() || 'N/A'
+
+        // BOOK DETAILS
+        .col-lg-8
+          // TITLE & RATING
+          h1.display-5.fw-bold.mb-3= book.title
+          
+          .book-meta.mb-4.pb-4.border-bottom
+            .d-flex.align-items-center.gap-4.flex-wrap
+              .rating-section
+                .stars
+                  each i in [1,2,3,4,5]
+                    if i <= Math.round(book.stats.averageRating)
+                      i.fas.fa-star.text-warning
+                    else
+                      i.far.fa-star.text-warning
+                p.text-muted.small.mt-2
+                  strong= book.stats.averageRating.toFixed(1)
+                  |  out of 5
+                  br
+                  | (#{book.stats.reviewCount} reviews)
+
+              .separator |
+
+              .author-info
+                p.text-muted.small By
+                strong.d-block= book.author.name
+                p.text-muted.small.mt-2 #{book.stats.totalSales} people bought this
+
+              .separator |
+
+              .price-section
+                p.text-muted.small Price:
+                h3.text-primary.fw-bold
+                  if book.pricing.digital.isAvailable
+                    | $#{book.pricing.digital.price}
+                  else if book.pricing.physical.isAvailable
+                    | $#{book.pricing.physical.price}
+
+          // DESCRIPTION
+          .description-section.mb-5
+            h4.fw-bold Description
+            p= book.description
+            if book.metadata && book.metadata.tags && book.metadata.tags.length > 0
+              .tags.mt-3
+                each tag in book.metadata.tags
+                  span.badge.bg-light.text-dark.me-2.mb-2= tag
+
+          // METADATA
+          .metadata-section.mb-5
+            h4.fw-bold Book Information
+            .row.g-4
+              .col-md-6
+                p
+                  strong ISBN:
+                  br
+                  code= book.isbn || 'N/A'
+              .col-md-6
+                p
+                  strong Genre:
+                  br
+                  if book.metadata && book.metadata.genre && book.metadata.genre.length > 0
+                    each genre in book.metadata.genre
+                      span.badge.bg-primary.me-1= genre
+              .col-md-6
+                p
+                  strong Publisher:
+                  br
+                  = book.metadata.publisher || 'N/A'
+              .col-md-6
+                p
+                  strong Edition:
+                  br
+                  = book.metadata.edition || 'First Edition'
+
+          // PREVIEW SECTION
+          if book.preview && book.preview.url
+            .preview-section.mb-5
+              h4.fw-bold Preview
+              p.text-muted Preview Pages #{book.preview.pageRange}
+              
+              .preview-container.bg-light.p-4.rounded
+                iframe(
+                  src=book.preview.url
+                  style="width: 100%; height: 500px; border: none; border-radius: 0.5rem;"
+                )
+
+          // AUTHOR INFO
+          .author-section.bg-light.p-4.rounded.mb-5
+            .d-flex.align-items-start.gap-3
+              img.rounded-circle(
+                src=`https://i.pravatar.cc/100?u=${book.author.userId}`
+                alt=book.author.name
+                style="width: 80px; height: 80px; object-fit: cover;"
+              )
+              .flex-grow-1
+                h5.fw-bold= book.author.name
+                p.text-muted.small= book.author.bio || 'Author at Bookify'
+                a.btn.btn-sm.btn-outline-primary(href=`/author/${book.author.userId}`) View More Books
+
+          // REVIEWS SECTION
+          .reviews-section.mb-5
+            .d-flex.justify-content-between.align-items-center.mb-4
+              h4.fw-bold Reviews & Ratings
+              if user
+                button.btn.btn-primary.btn-sm(data-bs-toggle="modal" data-bs-target="#reviewModal") Leave a Review
+
+            // REVIEWS LIST
+            .reviews-list
+              if book.reviews && book.reviews.length > 0
+                each review in book.reviews.slice(0, 5)
+                  .review-item.pb-4.mb-4.border-bottom
+                  .d-flex.align-items-start.gap-3
+                    img.rounded-circle(
+                      src=`https://i.pravatar.cc/40?u=${review.userId}`
+                      alt="Reviewer"
+                      style="width: 40px; height: 40px; object-fit: cover;"
+                    )
+                    .flex-grow-1
+                      .d-flex.justify-content-between.align-items-start
+                        .review-header
+                          if review.userId
+                            strong= `${review.userId.firstName} ${review.userId.lastName}`
+                          else
+                            strong Anonymous User
+                          .stars.small.ms-2
+                            each i in [1,2,3,4,5]
+                              if i <= review.rating
+                                i.fas.fa-star.text-warning
+                              else
+                                i.far.fa-star.text-warning
+                          p.text-muted.small.mt-1= new Date(review.createdAt).toLocaleDateString()
+                      
+                        if user && review.userId == user._id
+                          .dropdown
+                            button.btn.btn-sm.btn-light(data-bs-toggle="dropdown")
+                              i.fas.fa-ellipsis-v
+                            ul.dropdown-menu
+                              li
+                                a.dropdown-item(href="#") Edit
+                              li
+                                a.dropdown-item.text-danger(href="#") Delete
+
+                      p.mt-2= review.reviewText
+              else
+                p.text-muted.text-center.py-4 No reviews yet. Be the first to review!
+
+  // PURCHASE MODAL
+  #purchaseModal.modal.fade(tabindex="-1")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title Select Format & Quantity
+          button.btn-close(type="button" data-bs-dismiss="modal")
+        .modal-body
+          if book.pricing.digital.isAvailable || book.pricing.physical.isAvailable
+            form#purchaseForm
+              if book.pricing.digital.isAvailable
+                .form-check.mb-3
+                  input.form-check-input(type="radio" name="format" value="digital" id="formatDigital" checked)
+                  label.form-check-label(for="formatDigital")
+                    strong Digital Book
+                    br
+                    small.text-muted Instant access, read online
+                    br
+                    strong= `$${book.pricing.digital.price}`
+
+              if book.pricing.physical.isAvailable
+                .form-check.mb-3
+                  input.form-check-input(type="radio" name="format" value="physical" id="formatPhysical")
+                  label.form-check-label(for="formatPhysical")
+                    strong Physical Book
+                    br
+                    small.text-muted Delivered to your address
+                    br
+                    strong= `$${book.pricing.physical.price}`
+
+              if book.pricing.physical.isAvailable
+                .mb-3
+                  label.form-label(for="quantity") Quantity:
+                  input.form-control(type="number" id="quantity" name="quantity" value="1" min="1")
+        
+        .modal-footer
+          button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancel
+          button.btn.btn-primary(type="button" onclick="handleAddToCart()") Add to Cart
+
+  // REVIEW MODAL
+  if user
+    #reviewModal.modal.fade(tabindex="-1")
+      .modal-dialog
+        .modal-content
+          .modal-header
+            h5.modal-title Leave a Review
+            button.btn-close(type="button" data-bs-dismiss="modal")
+          .modal-body
+            form#reviewForm
+              .mb-3
+                label.form-label Rating:
+                .stars-input
+                  each i in [1,2,3,4,5]
+                    input.form-check-input.me-2(
+                      type="radio"
+                      name="rating"
+                      value=i
+                      id=`star${i}`
+                    )
+                    label.form-check-label.me-3(for=`star${i}`)
+                      i.fas.fa-star
+
+              .mb-3
+                label.form-label(for="reviewText") Review (optional):
+                textarea.form-control(id="reviewText" name="reviewText" rows="5" placeholder="Share your thoughts..." maxlength="1000")
+                small.text-muted 0/1000
+
+          .modal-footer
+            button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancel
+            button.btn.btn-primary(type="submit" form="reviewForm") Submit Review
+
+block styles
+  style.
+    .book-detail-image {
+      position: relative;
+    }
+    .action-buttons .btn {
+      padding: 0.75rem;
+    }
+    .info-card .info-item {
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .info-card .info-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .stars-input input[type="radio"] {
+      display: none;
+    }
+    .stars-input label {
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+    .stars-input input[type="radio"]:checked ~ label {
+      color: #ffc107;
+    }
+    .review-item {
+      transition: all 0.3s ease;
+    }
+    .review-item:hover {
+      background: #f8f9fa;
+      padding: 1rem;
+      margin: -1rem;
+      border-radius: 0.5rem;
+    }
+
+block scripts
+  script.
+    async function handleAddToCart() {
+      const bookId = '#{book._id}';
+      const formatEl = document.querySelector('input[name="format"]:checked');
+      if (!formatEl) return showToast('Please select a format', 'warning');
+      
+      const format = formatEl.value;
+      const quantityEl = document.getElementById('quantity');
+      const quantity = quantityEl ? quantityEl.value : 1;
+      
+      // Global addToCart from main.js
+      await addToCart(bookId, format, parseInt(quantity));
+      
+      // Close modal
+      const modalEl = document.getElementById('purchaseModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+    
+    if (document.getElementById('reviewForm')) {
+      document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const ratingEl = document.querySelector('input[name="rating"]:checked');
+        if (!ratingEl) return showToast('Please select a rating', 'warning');
+        
+        const rating = ratingEl.value;
+        const reviewText = document.getElementById('reviewText').value;
+        const bookId = '#{book._id}';
+        
+        await submitReview(bookId, rating, reviewText);
+        
+        // Close modal
+        const modalEl = document.getElementById('reviewModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+      });
+    }

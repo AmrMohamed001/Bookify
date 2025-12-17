@@ -1,0 +1,230 @@
+extends layout
+
+block content
+  .author-dashboard.py-4
+    .container-fluid.px-4
+
+      .row.mb-4
+        .col
+          h1.fw-bold Author Dashboard
+          p.text-muted Manage your books and track sales
+
+      // STATS
+      .row.g-3.mb-4
+        .col-md-3
+          .stat-card.bg-white.p-4.rounded.shadow-sm
+            .d-flex.align-items-center.justify-content-between
+              .stat-info
+                p.text-muted.small Books Published
+                h3.fw-bold= stats?.publishedBooks || 0
+              i.fas.fa-book.text-primary.display-4.opacity-50
+
+        .col-md-3
+          .stat-card.bg-white.p-4.rounded.shadow-sm
+            .d-flex.align-items-center.justify-content-between
+              .stat-info
+                p.text-muted.small Total Sales
+                h3.fw-bold= stats?.totalSales || 0
+              i.fas.fa-shopping-cart.text-info.display-4.opacity-50
+
+        .col-md-3
+          .stat-card.bg-white.p-4.rounded.shadow-sm
+            .d-flex.align-items-center.justify-content-between
+              .stat-info
+                p.text-muted.small Total Revenue
+                h3.fw-bold= `$${stats?.totalRevenue?.toFixed(2) || '0.00'}`
+              i.fas.fa-dollar-sign.text-success.display-4.opacity-50
+
+        .col-md-3
+          .stat-card.bg-white.p-4.rounded.shadow-sm
+            .d-flex.align-items-center.justify-content-between
+              .stat-info
+                p.text-muted.small Avg Rating
+                h3.fw-bold= stats?.avgRating?.toFixed(1) || '0.0'
+              i.fas.fa-star.text-warning.display-4.opacity-50
+
+      // MAIN CONTENT
+      .row.g-4
+        .col-lg-8
+          // MY BOOKS
+          .section.bg-white.rounded.shadow-sm.p-4.mb-4
+            .d-flex.justify-content-between.align-items-center.mb-4
+              h5.fw-bold My Books
+              a.btn.btn-primary.btn-sm(href="/author/book/new")
+                i.fas.fa-plus.me-2
+                | Upload New Book
+
+            if myBooks && myBooks.length > 0
+              .table-responsive
+                table.table.table-hover.mb-0
+                  thead
+                    tr.border-bottom
+                      th Book Title
+                      th Status
+                      th Sales
+                      th Revenue
+                      th Rating
+                      th Actions
+                  tbody
+                    each book in myBooks
+                      tr
+                        td
+                          strong.text-truncate(style="max-width: 150px;")= book.title
+                        td
+                          span(class=`badge bg-${book.status === 'approved' ? 'success' : book.status === 'pending' ? 'warning' : 'danger'}`)
+                            = book.status
+                        td
+                          = book.stats.totalSales
+                        td.fw-bold
+                          = `$${book.pricing.digital.price * book.stats.totalSales}`
+                        td
+                          .stars.small
+                            each i in [1,2,3,4,5]
+                              if i <= Math.round(book.stats.averageRating)
+                                i.fas.fa-star.text-warning
+                              else
+                                i.far.fa-star.text-warning
+                        td
+                          a.btn.btn-sm.btn-outline-secondary(href=`/book/${book._id}`)
+                            i.fas.fa-eye
+                          a.btn.btn-sm.btn-outline-primary.ms-1(href=`/author/book/${book._id}/edit`)
+                            i.fas.fa-edit
+                          button.btn.btn-sm.btn-outline-danger.ms-1(onclick=`deleteBook('${book._id}')`)
+                            i.fas.fa-trash
+            else
+              p.text-muted.text-center.py-5
+                i.fas.fa-book.display-4.d-block.mb-3
+                | No books uploaded yet
+                br
+                a(href="/author/book/new") Upload your first book
+
+          // SALES ANALYTICS
+          .section.bg-white.rounded.shadow-sm.p-4
+            h5.fw-bold.mb-4 Sales Analytics
+            .row.g-4
+              .col-md-6
+                h6.text-muted Sales This Month
+                canvas#salesChart(height="200")
+              .col-md-6
+                h6.text-muted Revenue Breakdown
+                canvas#revenueChart(height="200")
+
+        .col-lg-4
+          // QUICK ACTIONS
+          .section.bg-white.rounded.shadow-sm.p-4.mb-4
+            h5.fw-bold.mb-3 Quick Actions
+            .d-grid.gap-2
+              a.btn.btn-primary(href="/author/book/new")
+                i.fas.fa-plus.me-2
+                | Upload New Book
+              a.btn.btn-outline-primary(href="/author/sales")
+                i.fas.fa-chart-line.me-2
+                | View Sales Report
+              a.btn.btn-outline-primary(href="/author/settings")
+                i.fas.fa-cog.me-2
+                | Author Settings
+
+          // RECENT REVIEWS
+          .section.bg-white.rounded.shadow-sm.p-4
+            h6.fw-bold.mb-3 Recent Reviews
+            each review in recentReviews || []
+              .review-item.pb-3.mb-3.border-bottom
+                .d-flex.align-items-start.gap-2
+                  img.rounded-circle(
+                    src=`https://i.pravatar.cc/32?u=${review.userId}`
+                    alt="Reviewer"
+                    style="width: 32px; height: 32px; object-fit: cover;"
+                  )
+                  .flex-grow-1
+                    .d-flex.justify-content-between.align-items-start
+                      .review-meta
+                        strong.small= review.userName
+                        .stars.small.mt-1
+                          each i in [1,2,3,4,5]
+                            if i <= review.rating
+                              i.fas.fa-star.text-warning
+                            else
+                              i.far.fa-star.text-warning
+                      p.text-muted.small.mb-0
+                        = new Date(review.createdAt).toLocaleDateString()
+                    p.text-muted.small.mt-2.mb-0= review.reviewText.substring(0, 100) + '...'
+
+            .review-item:last-child {
+              border-bottom: none !important;
+            }
+
+block styles
+  style.
+    .stat-card {
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+    }
+    .section {
+      border: 1px solid #e0e0e0;
+    }
+    .review-item {
+      border-color: #e0e0e0 !important;
+    }
+    .stars {
+      font-size: 0.75rem;
+    }
+
+block scripts
+  script(src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js")
+  script.
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+      type: 'line',
+      data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+          label: 'Sales',
+          data: [12, 19, 3, 25],
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Digital', 'Physical'],
+        datasets: [{
+          data: [65, 35],
+          backgroundColor: ['#667eea', '#764ba2']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+
+    function deleteBook(bookId) {
+      if (!confirm('Are you sure? This cannot be undone.')) return;
+      fetch(`/api/v1/books/${bookId}`, {
+        method: 'DELETE'
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('Error deleting book');
+        }
+      });
+    }

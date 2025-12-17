@@ -8,6 +8,10 @@ const AppError = require('../utils/appError');
 // @access  Public
 exports.signup = catchAsync(async (req, res, next) => {
   const result = await authService.register(req.body);
+
+  // Note: We don't auto-login after signup since email verification is required
+  // Cookies will be set after email verification
+
   res.status(201).json({
     status: 'success',
     data: { ...result },
@@ -41,6 +45,22 @@ exports.resendVerificationEmail = catchAsync(async (req, res, next) => {
 // @access  Public
 exports.login = catchAsync(async (req, res, next) => {
   const result = await authService.login(req.body.email, req.body.password);
+
+  // Set cookies for browser-based requests
+  res.cookie('accessToken', result.accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 15 * 60 * 1000, // 15 minutes
+  });
+
+  res.cookie('refreshToken', result.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -53,7 +73,30 @@ exports.login = catchAsync(async (req, res, next) => {
 // @route   POST /api/v1/auth/refresh-token
 // @access  Public
 exports.refreshAccessToken = catchAsync(async (req, res, next) => {
-  const result = await authService.refreshAccessToken(req.body.refreshToken);
+  // 1) Get refresh token from body or cookies
+  const refreshToken = req.body.refreshToken || req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return next(new AppError(400, 'No refresh token provided'));
+  }
+
+  const result = await authService.refreshAccessToken(refreshToken);
+
+  // Set new cookies
+  res.cookie('accessToken', result.accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 15 * 60 * 1000, // 15 minutes
+  });
+
+  res.cookie('refreshToken', result.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -122,8 +165,38 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 // @route   GET /api/v1/auth/google/callback
 // @access  Public
 exports.googleCallback = catchAsync(async (req, res, next) => {
-  if (!req.user) return next(new AppError(401, 'Google authentication failed'));
-  const result = await authService.googleAuth(req.user);
-  const redirectUrl = `${HOSTURL}/auth/callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
-  res.redirect(redirectUrl);
+  if (!req.user) {
+    console.error('Google OAuth: No user in request');
+    return res.redirect('/login?error=google-auth-failed');
+  }
+
+  try {
+    const result = await authService.googleAuth(req.user);
+
+    if (!result || !result.accessToken) {
+      console.error('Google OAuth: No tokens generated');
+      return res.redirect('/login?error=token-generation-failed');
+    }
+
+    // Set cookies for authenticated session
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Redirect to dashboard after successful Google auth
+    res.redirect('/dashboard');
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    res.redirect('/login?error=google-auth-error');
+  }
 });

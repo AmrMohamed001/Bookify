@@ -1,0 +1,147 @@
+extends layout
+
+block content
+  .dashboard-container.py-4
+    .container-fluid.px-4
+
+      .row.mb-4
+        .col-md-8
+          h1.fw-bold User Dashboard
+          p.text-muted Welcome back, #{user.firstName}!
+
+      .row.g-4
+        // SIDEBAR
+        .col-lg-3
+          .dashboard-sidebar.bg-light.rounded.p-4.sticky-lg-top(style="top: 100px;")
+            .user-profile.text-center.mb-4
+              img.rounded-circle.mb-3(
+                src=`https://i.pravatar.cc/150?u=${user._id}`
+                alt=user.firstName
+                style="width: 100px; height: 100px; object-fit: cover;"
+              )
+              h5.fw-bold= `${user.firstName} ${user.lastName}`
+              p.text-muted.small= user.email
+
+            nav.nav.flex-column
+              a.nav-link.active(href="/dashboard")
+                i.fas.fa-home.me-2
+                | Dashboard
+              a.nav-link(href="/profile")
+                i.fas.fa-user.me-2
+                | My Profile
+              a.nav-link(href="/wishlist")
+                i.fas.fa-heart.me-2
+                | Wishlist
+              a.nav-link(href="/cart")
+                i.fas.fa-shopping-cart.me-2
+                | Shopping Cart
+              a.nav-link(href="/orders")
+                i.fas.fa-receipt.me-2
+                | Orders & History
+              a.nav-link(href="/settings")
+                i.fas.fa-cog.me-2
+                | Settings
+              a.nav-link(href="/profile/edit")
+                i.fas.fa-user-edit.me-2
+                | Edit Profile
+
+        // MAIN CONTENT
+        .col-lg-9
+          // STATS
+          .row.g-3.mb-4
+            .col-md-3
+              .stat-card.bg-white.p-4.rounded.shadow-sm
+                .d-flex.align-items-center.justify-content-between
+                  .stat-info
+                    p.text-muted.small Wishlist Items
+                    h3.fw-bold= stats && stats.wishlistCount ? stats.wishlistCount : 0
+                  i.fas.fa-heart.text-danger.display-4.opacity-50
+
+            .col-md-3
+              .stat-card.bg-white.p-4.rounded.shadow-sm
+                .d-flex.align-items-center.justify-content-between
+                  .stat-info
+                    p.text-muted.small In Cart
+                    h3.fw-bold= stats && stats.cartCount ? stats.cartCount : 0
+                  i.fas.fa-shopping-cart.text-primary.display-4.opacity-50
+
+            .col-md-3
+              .stat-card.bg-white.p-4.rounded.shadow-sm
+                .d-flex.align-items-center.justify-content-between
+                  .stat-info
+                    p.text-muted.small Total Spent
+                    h3.fw-bold= stats && stats.totalSpent ? '$' + stats.totalSpent.toFixed(2) : '$0.00'
+                  i.fas.fa-dollar-sign.text-success.display-4.opacity-50
+
+            .col-md-3
+              .stat-card.bg-white.p-4.rounded.shadow-sm
+                .d-flex.align-items-center.justify-content-between
+                  .stat-info
+                    p.text-muted.small Reviews Written
+                    h3.fw-bold= stats && stats.reviewCount ? stats.reviewCount : 0
+                  i.fas.fa-star.text-warning.display-4.opacity-50
+
+          // RECENT ORDERS
+          .section.bg-white.rounded.shadow-sm.p-4.mb-4
+            .d-flex.justify-content-between.align-items-center.mb-4
+              h5.fw-bold Recent Orders
+              a.btn.btn-sm.btn-outline-primary(href="/orders") View All
+
+            if recentOrders && recentOrders.length > 0
+              .table-responsive
+                table.table.table-hover.mb-0
+                  thead
+                    tr.border-bottom
+                      th Order #
+                      th Date
+                      th Total
+                      th Status
+                      th Action
+                  tbody
+                    each order in recentOrders.slice(0, 5)
+                      tr
+                        td
+                          strong= `#${order.orderNumber}`
+                        td= new Date(order.createdAt).toLocaleDateString()
+                        td.fw-bold= `$${order.pricing.total.toFixed(2)}`
+                        td
+                          span(class=`badge bg-${order.fulfillment.status === 'delivered' ? 'success' : order.fulfillment.status === 'shipped' ? 'info' : 'warning'}`)
+                            = order.fulfillment.status
+                        td
+                          a.btn.btn-sm.btn-outline-primary(href=`/order/${order._id}`) View
+            else
+              p.text-muted.text-center.py-4 No orders yet. Start shopping!
+
+          // QUICK ACTIONS
+          .section.bg-white.rounded.shadow-sm.p-4
+            h5.fw-bold.mb-3 Quick Actions
+            .row.g-2
+              .col-md-4
+                a.btn.btn-outline-primary.w-100(href="/books")
+                  i.fas.fa-plus.me-2
+                  | Browse Books
+              .col-md-4
+                a.btn.btn-outline-primary.w-100(href="/cart")
+                  i.fas.fa-shopping-cart.me-2
+                  | View Cart
+              .col-md-4
+                a.btn.btn-outline-primary.w-100(href="/wishlist")
+                  i.fas.fa-heart.me-2
+                  | Wishlist
+
+block styles
+  style.
+    .stat-card {
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+    }
+    .dashboard-sidebar {
+      border: 1px solid #e0e0e0;
+    }
+    .section {
+      border: 1px solid #e0e0e0;
+    }

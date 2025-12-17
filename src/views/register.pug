@@ -1,0 +1,159 @@
+extends layout
+
+block content
+  .auth-container
+    .container
+      .row.justify-content-center
+        .col-md-5
+
+          .auth-card.bg-white.rounded.shadow-sm.p-5
+            .text-center.mb-5
+              h2.fw-bold Create Account
+              p.text-muted Join Bookify and start your reading journey
+
+            form#registerForm(method="POST" action="/api/v1/auth/register")
+              .row.g-2.mb-3
+                .col-md-6
+                  label.form-label First Name
+                  input.form-control.form-control-lg(
+                    type="text"
+                    name="firstName"
+                    placeholder="John"
+                    required
+                  )
+                .col-md-6
+                  label.form-label Last Name
+                  input.form-control.form-control-lg(
+                    type="text"
+                    name="lastName"
+                    placeholder="Doe"
+                    required
+                  )
+
+              .mb-3
+                label.form-label Email Address
+                input.form-control.form-control-lg(
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  required
+                )
+
+              .mb-3
+                label.form-label Password
+                input.form-control.form-control-lg(
+                  type="password"
+                  name="password"
+                  id="password"
+                  placeholder="Min 8 characters"
+                  required
+                )
+                small.text-muted
+                  | Must contain uppercase, lowercase, number, and special character
+
+              .mb-3
+                label.form-label Confirm Password
+                input.form-control.form-control-lg(
+                  type="password"
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  placeholder="••••••••"
+                  required
+                )
+
+              .mb-4.form-check
+                input.form-check-input(
+                  type="checkbox"
+                  id="terms"
+                  name="terms"
+                  required
+                )
+                label.form-check-label(for="terms")
+                  | I agree to the
+                  a.ms-1(href="/terms") Terms of Service
+                  |  and
+                  a.ms-1(href="/privacy") Privacy Policy
+
+              button.btn.btn-primary.btn-lg.w-100.mb-3(type="submit") Create Account
+
+            hr
+
+            .social-login.mb-4
+              a.btn.btn-outline-secondary.w-100.mb-2(href="/api/v1/auth/google")
+                i.fab.fa-google.me-2
+                | Sign up with Google
+
+              button.btn.btn-outline-secondary.w-100(type="button" disabled)
+                i.fab.fa-facebook.me-2
+                | Sign up with Facebook (Coming Soon)
+
+            .text-center
+              p.text-muted
+                | Already have an account?
+                a.ms-2(href="/login") Sign in here
+
+      // ILLUSTRATION
+      .col-md-5.d-none.d-md-block
+        .auth-illustration.text-center.py-5
+          i.fas.fa-book-reader.display-1.text-primary.mb-4.d-block
+          h4.fw-bold Join Thousands of Readers
+          p.text-muted Explore digital & physical books, leave reviews, and build your library
+
+block styles
+  style.
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .auth-card {
+      border: none;
+    }
+    .auth-illustration {
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .auth-container {
+        min-height: auto;
+        padding: 2rem 0;
+        background: white;
+      }
+    }
+
+block scripts
+  script.
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+
+      // Validate passwords match
+      if (data.password !== data.confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+
+      // Convert confirmPassword to passwordConfirm
+      data.passwordConfirm = data.confirmPassword;
+      delete data.confirmPassword;
+      delete data.terms;
+
+      try {
+        const response = await fetch('/api/v1/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (response.ok) {
+          alert('Registration successful! Please check your email to verify.');
+          window.location.href = '/login';
+        } else {
+          alert(result.message || 'Registration failed');
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    });

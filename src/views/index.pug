@@ -1,0 +1,300 @@
+extends layout
+
+block content
+  // HERO SECTION - Luxury design with gradient and background pattern
+  .hero-section.py-5.position-relative.overflow-hidden(style="background: linear-gradient(135deg, #D4A373 0%, #b8956a 50%, #8B6914 100%); min-height: 500px;")
+    // Background pattern overlay
+    .hero-pattern(style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.1; background-image: url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');")
+
+    .container.position-relative(style="z-index: 2;")
+      .row.align-items-center.g-5
+        .col-lg-6.animate-fade-in-up
+          // Subtitle badge
+          .mb-3
+            span.px-3.py-2(style="background: rgba(255,255,255,0.2); border-radius: 50px; color: white; font-size: 0.875rem; font-weight: 500;")
+              i.fas.fa-sparkles.me-2
+              | Premium Book Collection
+          
+          h1.hero-headline.mb-4(style="color: #FFFFFF; font-family: var(--font-serif); font-size: 3.5rem; line-height: 1.1; text-shadow: 0 2px 4px rgba(0,0,0,0.1);") Your Library, Unbound.
+          
+          p.lead.mb-4(style="color: rgba(255,255,255,0.9); font-size: 1.25rem; max-width: 500px;") Discover your next favorite book from our curated collection of digital and physical editions. Read anywhere, anytime.
+          
+          .d-flex.gap-3.flex-wrap.mb-4
+            a.pill-btn.btn-lg.px-4.py-3(href="/books" style="background-color: #FFFFFF; color: #D4A373; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.2);")
+              i.fas.fa-book-open.me-2
+              | Browse Books
+            a.pill-btn.btn-lg.px-4.py-3(href="/books?format=digital" style="background: transparent; color: #FFFFFF; border: 2px solid rgba(255,255,255,0.5); backdrop-filter: blur(5px);")
+              i.fas.fa-tablet-alt.me-2
+              | Digital Edition
+
+          // Stats
+          .d-flex.gap-4.mt-5
+            .stat-item.text-center
+              h3.fw-bold.mb-0(style="color: #FFFFFF; font-size: 2rem;") 10K+
+              p.mb-0(style="color: rgba(255,255,255,0.7); font-size: 0.875rem;") Books
+            .stat-item.text-center
+              h3.fw-bold.mb-0(style="color: #FFFFFF; font-size: 2rem;") 500+
+              p.mb-0(style="color: rgba(255,255,255,0.7); font-size: 0.875rem;") Authors
+            .stat-item.text-center
+              h3.fw-bold.mb-0(style="color: #FFFFFF; font-size: 2rem;") 50K+
+              p.mb-0(style="color: rgba(255,255,255,0.7); font-size: 0.875rem;") Readers
+
+        .col-lg-6.text-center.d-none.d-lg-block
+          // Book stack illustration with floating animation
+          .hero-books-stack.position-relative(style="height: 400px;")
+            .floating-book.position-absolute(style="background: white; border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); width: 180px; height: 260px; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-5deg); animation: floatBook1 4s ease-in-out infinite;")
+              .d-flex.align-items-center.justify-content-center.h-100(style="background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); border-radius: 8px;")
+                i.fas.fa-book(style="font-size: 80px; color: #D4A373;")
+            .floating-book.position-absolute(style="background: white; border-radius: 8px; box-shadow: 0 15px 30px rgba(0,0,0,0.2); width: 160px; height: 240px; top: 40%; left: 35%; transform: rotate(10deg); animation: floatBook2 5s ease-in-out infinite 0.5s;")
+              .d-flex.align-items-center.justify-content-center.h-100(style="background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%); border-radius: 8px;")
+                i.fas.fa-book-open(style="font-size: 60px; color: #92400e;")
+            .floating-book.position-absolute(style="background: white; border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); width: 140px; height: 200px; top: 55%; left: 65%; transform: rotate(-8deg); animation: floatBook3 6s ease-in-out infinite 1s;")
+              .d-flex.align-items-center.justify-content-center.h-100(style="background: linear-gradient(135deg, #dbeafe 0%, #3b82f6 100%); border-radius: 8px;")
+                i.fas.fa-tablet-alt(style="font-size: 50px; color: white;")
+
+  // BROWSE BY GENRE - Category circles with clean design
+  .browse-genre-section.py-5(style="background-color: #FFFFFF;")
+    .container
+      h2.mb-5.fw-bold.text-center(style="color: #1A1A1A; font-size: 28px;") Browse by Genre
+      
+      .row.g-4.justify-content-center
+        each genre in ['Romance', 'Thriller', 'Sci-Fi', 'Biography', 'Fantasy', 'Mystery']
+          .col-lg-2.col-md-3.col-sm-4.text-center
+            a.genre-circle.d-flex.flex-column.align-items-center.justify-content-center.rounded-circle.mx-auto(href=`/books?genre=${genre}` style="width: 140px; height: 140px; background-color: #F9F9F9; border: 2px solid #e5e7eb; transition: all 0.3s ease; cursor: pointer;")
+              i.fas.fa-book(style="font-size: 40px; color: #D4A373; margin-bottom: 8px;")
+              span(style="color: #1A1A1A; font-weight: 600; font-size: 14px;")= genre
+
+  // TRENDING THIS WEEK - Product card grid
+  .trending-section.py-5(style="background-color: #F9F9F9;")
+    .container
+      h2.mb-5.fw-bold.text-center(style="color: #1A1A1A; font-size: 28px;")
+        i.fas.fa-fire(style="color: #D4A373; margin-right: 8px;")
+        | Trending This Week
+
+      if featuredBooks && featuredBooks.length > 0
+        .row.g-4
+          each book in featuredBooks.slice(0, 4)
+            .col-lg-3.col-md-6
+              .product-card.modern-card(style="transition: all 0.3s ease;")
+                .product-image(style="position: relative; height: 280px; overflow: hidden; background-color: #F9F9F9;")
+                  if book.coverImage && book.coverImage.url
+                    img(src=book.coverImage.url alt=book.title style="width: 100%; height: 100%; object-fit: cover;")
+                  else
+                    .placeholder-image.d-flex.align-items-center.justify-content-center(style="width: 100%; height: 100%; background-color: #e5e7eb;")
+                      i.fas.fa-book(style="font-size: 60px; color: #999;")
+                  
+                  // FORMAT BADGES
+                  .position-absolute.bottom-0.start-0.m-2.d-flex.gap-1
+                    if book.pricing && book.pricing.digital && book.pricing.digital.isAvailable !== false
+                      span.badge-format.badge-digital
+                        i.fas.fa-tablet-alt.me-1
+                        | Digital
+                    if book.pricing && book.pricing.physical && book.pricing.physical.isAvailable
+                      span.badge-format.badge-physical
+                        i.fas.fa-book.me-1
+                        | Physical
+                  
+                  if book.metadata && book.metadata.genre && book.metadata.genre.length
+                    .badge.position-absolute.top-0.end-0.m-2(style="background-color: #D4A373; color: #FFFFFF;")= book.metadata.genre[0]
+
+                .product-info.p-3
+                  h6.mb-2(style="color: #1A1A1A; font-weight: 600; min-height: 40px;")= book.title
+                  
+                  p.text-muted.small.mb-2
+                    if book.author && book.author.name
+                      | by #{book.author.name}
+                    else
+                      | by Unknown Author
+
+                  .rating.mb-3
+                    each i in [1,2,3,4,5]
+                      if i <= (book.stats && book.stats.averageRating ? Math.round(book.stats.averageRating) : 0)
+                        i.fas.fa-star(style="color: #D4A373;")
+                      else
+                        i.far.fa-star(style="color: #D4A373;")
+                    span.ms-2.text-muted.small
+                      if book.stats && book.stats.reviewCount
+                        = `(${book.stats.reviewCount})`
+
+                .product-footer.px-3.pb-3
+                  .price.mb-3
+                    if book.pricing && book.pricing.digital && book.pricing.digital.price
+                      span.fw-bold(style="font-size: 18px; color: #1A1A1A;")= `$${book.pricing.digital.price}`
+                  
+                  if user
+                    a.btn.btn-sm.w-100(href="javascript:void(0);" onclick=`addToCart('${book._id}', 'digital', 1)` style="background-color: #D4A373; color: #FFFFFF; border: none;")
+                      i.fas.fa-shopping-cart.me-2
+                      | Add to Cart
+                  else
+                    a.btn.btn-sm.w-100(href="/login" style="background-color: #D4A373; color: #FFFFFF; border: none;")
+                      i.fas.fa-shopping-cart.me-2
+                      | Sign in to Buy
+      else
+        .text-center.py-5
+          p.text-muted No trending books available yet.
+
+  // PROMOTIONAL BANNERS - Split card design
+  .promo-section.py-5(style="background-color: #FFFFFF;")
+    .container
+      .row.g-4
+        .col-md-6
+          .promo-card.p-5.rounded(style="background-color: #E9D8C5; min-height: 250px; display: flex; flex-direction: column; justify-content: center; border: none;")
+            h3.mb-3(style="color: #1A1A1A; font-weight: 700; font-size: 26px;") New Arrivals
+            p.mb-4(style="color: #1A1A1A; font-size: 16px;") Discover the latest releases added to our collection this week
+            a.btn(href="/books?sort=newest" style="background-color: #D4A373; color: #FFFFFF; border: none; width: fit-content;")
+              | Explore Now
+              i.fas.fa-arrow-right.ms-2
+
+        .col-md-6
+          .promo-card.p-5.rounded(style="background-color: #2a2a2a; color: #FFFFFF; min-height: 250px; display: flex; flex-direction: column; justify-content: center;")
+            h3.mb-3(style="color: #FFFFFF; font-weight: 700; font-size: 26px;") Best Sellers 2025
+            p.mb-4(style="color: #FFFFFF; font-size: 16px;") The most loved and highly-rated books of the year
+            a.btn(href="/books?sort=popular" style="background-color: #D4A373; color: #FFFFFF; border: none; width: fit-content;")
+              | View List
+              i.fas.fa-arrow-right.ms-2
+
+  // DEALS OF THE MONTH - Sale section with pricing
+  .deals-section.py-5(style="background-color: #F9F9F9;")
+    .container
+      h2.mb-5.fw-bold.text-center(style="color: #1A1A1A; font-size: 28px;")
+        i.fas.fa-tag(style="color: #D4A373; margin-right: 8px;")
+        | Deals of the Month
+
+      if featuredBooks && featuredBooks.length > 0
+        .row.g-4
+          each book, idx in featuredBooks.slice(4, 8)
+            .col-lg-3.col-md-6
+              .product-card(style="background-color: #FFFFFF; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; position: relative;")
+                .deal-badge.position-absolute.top-0.start-0.m-2(style="background-color: #D4A373; color: #FFFFFF; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; z-index: 10;")
+                  = `Save ${Math.floor(Math.random() * 30) + 10}%`
+
+                .product-image(style="position: relative; height: 280px; overflow: hidden; background-color: #F9F9F9;")
+                  if book.coverImage && book.coverImage.url
+                    img(src=book.coverImage.url alt=book.title style="width: 100%; height: 100%; object-fit: cover;")
+                  else
+                    .placeholder-image.d-flex.align-items-center.justify-content-center(style="width: 100%; height: 100%; background-color: #e5e7eb;")
+                      i.fas.fa-book(style="font-size: 60px; color: #999;")
+
+                .product-info.p-3
+                  h6.mb-2(style="color: #1A1A1A; font-weight: 600; min-height: 40px;")= book.title
+                  
+                  p.text-muted.small.mb-3
+                    if book.author && book.author.name
+                      | by #{book.author.name}
+                    else
+                      | by Unknown Author
+
+                .product-footer.px-3.pb-3
+                  .price.mb-3
+                    if book.pricing && book.pricing.digital && book.pricing.digital.price
+                      span(style="text-decoration: line-through; color: #999; margin-right: 10px;")= `$${(parseFloat(book.pricing.digital.price) * 1.3).toFixed(2)}`
+                      span.fw-bold(style="font-size: 18px; color: #D4A373;")= `$${book.pricing.digital.price}`
+                  
+                  if user
+                    a.btn.btn-sm.w-100(href="javascript:void(0);" onclick=`addToCart('${book._id}', 'digital', 1)` style="background-color: #D4A373; color: #FFFFFF; border: none;")
+                      i.fas.fa-shopping-cart.me-2
+                      | Add to Cart
+                  else
+                    a.btn.btn-sm.w-100(href="/login" style="background-color: #D4A373; color: #FFFFFF; border: none;")
+                      i.fas.fa-shopping-cart.me-2
+                      | Sign in to Buy
+      else
+        .text-center.py-5
+          p.text-muted No deals available yet.
+
+block styles
+  style.
+    .bg-gradient {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .book-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+    .book-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    }
+    .book-cover {
+      overflow: hidden;
+      height: 300px;
+    }
+    .category-card {
+      transition: all 0.3s ease;
+    }
+    .category-card:hover {
+      background-color: #f8f9ff !important;
+      transform: translateY(-3px);
+    }
+    .step-icon {
+      width: 100px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .search-container .input-group {
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      border-radius: 50px;
+      overflow: hidden;
+    }
+    .search-container .form-control {
+      border: none;
+      padding: 12px 20px;
+    }
+    .search-container .btn {
+      border: none;
+    }
+    
+    /* Floating book animations */
+    @keyframes floatBook1 {
+      0%, 100% { transform: translate(-50%, -50%) rotate(-5deg); }
+      50% { transform: translate(-50%, -60%) rotate(-3deg); }
+    }
+    @keyframes floatBook2 {
+      0%, 100% { transform: rotate(10deg) translateY(0); }
+      50% { transform: rotate(12deg) translateY(-15px); }
+    }
+    @keyframes floatBook3 {
+      0%, 100% { transform: rotate(-8deg) translateY(0); }
+      50% { transform: rotate(-6deg) translateY(-20px); }
+    }
+    
+    /* Smooth reveal animation */
+    .animate-fade-in-up {
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+block scripts
+  script.
+    // Add to Cart function for homepage (uses global apiFetch from main.js)
+    async function addToCart(bookId, format = 'digital', quantity = 1) {
+      try {
+        const response = await fetch('/api/v1/cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            bookId: bookId,
+            format: format,
+            quantity: quantity
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Error adding to cart');
+        }
+
+        if (data.status === 'success') {
+          alert('✓ Book added to cart!');
+          // Optionally redirect to cart
+          // window.location.href = '/cart';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+      }
+    }

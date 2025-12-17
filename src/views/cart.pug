@@ -1,0 +1,153 @@
+extends layout
+
+block content
+  .cart-container.py-4
+    .container
+
+      h1.fw-bold.mb-4 Shopping Cart
+
+      if cartItems && cartItems.length > 0
+        .row.g-4
+          // CART ITEMS
+          .col-lg-8
+            .cart-items-section.bg-white.rounded.shadow-sm.p-4
+              each item, index in cartItems
+                .cart-item.pb-4.mb-4.border-bottom
+                  .row.align-items-center
+                    .col-md-2.mb-3.mb-md-0
+                      if item.book && item.book.coverImage && item.book.coverImage.url
+                        img.img-fluid.rounded(src=item.book.coverImage.url alt=item.book.title style="height: 150px; object-fit: cover; width: 100%;")
+                      else
+                        .placeholder-image.d-flex.align-items-center.justify-content-center.rounded(style="height: 150px; width: 100%; background-color: #e5e7eb;")
+                          i.fas.fa-book(style="font-size: 40px; color: #999;")
+
+                    .col-md-6.mb-3.mb-md-0
+                      if item.book
+                        h5.fw-bold= item.book.title || 'Unknown Title'
+                        p.text-muted.small
+                          if item.book.author && item.book.author.name
+                            | by #{item.book.author.name}
+                          else
+                            | by Unknown Author
+                      
+                      .badge-format(class=item.format === 'digital' ? 'badge-digital' : 'badge-physical')
+                        if item.format === 'digital'
+                          i.fas.fa-tablet-alt.me-1
+                        else
+                          i.fas.fa-book.me-1
+                        = item.format === 'digital' ? 'Digital' : 'Physical'
+
+                      if item.format === 'physical'
+                        .mt-2.d-flex.align-items-center.gap-2
+                          label.text-muted.small Quantity:
+                          input.form-control.form-control-sm(
+                            type="number"
+                            value=item.quantity
+                            min="1"
+                            max="10"
+                            style="width: 60px;"
+                            onchange=`updateCartQuantity('${item._id}', this.value)`
+                          )
+
+                    .col-md-2.text-end.mb-3.mb-md-0
+                      h5.fw-bold= `$${item.price.toFixed(2)}`
+                      p.text-muted.small
+                        if item.format === 'physical'
+                          | x#{item.quantity}
+
+                    .col-md-2.text-end
+                      button.btn.btn-sm.btn-outline-danger(onclick=`removeFromCart('${item._id}')`)
+                        i.fas.fa-trash
+                        |  Remove
+
+          // CART SUMMARY
+          .col-lg-4
+            .cart-summary.bg-light.rounded.p-4.sticky-lg-top(style="top: 100px;")
+              h5.fw-bold.mb-4 Order Summary
+
+              .summary-item.mb-3.pb-3.border-bottom
+                .d-flex.justify-content-between.mb-2
+                  span Subtotal
+                  span= `$${subtotal.toFixed(2)}`
+
+              if tax && tax > 0
+                .summary-item.mb-3.pb-3.border-bottom
+                  .d-flex.justify-content-between.mb-2
+                    span= `Tax (${taxRate}%)`
+                    span= `$${tax.toFixed(2)}`
+
+              if discount && discount > 0
+                .summary-item.mb-3.pb-3.border-bottom
+                  .d-flex.justify-content-between.mb-2
+                    span.text-success Discount
+                    span.text-success= `-$${discount.toFixed(2)}`
+
+              if hasPhysicalBooks && shippingCost > 0
+                .summary-item.mb-3.pb-3.border-bottom
+                  .d-flex.justify-content-between.mb-2
+                    span Shipping
+                    span= `$${shippingCost.toFixed(2)}`
+
+              .summary-total.mb-4
+                .d-flex.justify-content-between.align-items-center
+                  h5.fw-bold Total
+                  h4.text-primary.fw-bold= `$${total.toFixed(2)}`
+
+              a.btn.btn-primary.w-100.btn-lg.mb-3(href="/checkout")
+                | Proceed to Checkout
+              
+              button.btn.btn-outline-secondary.w-100(onclick="history.back()")
+                | Continue Shopping
+
+              // COUPON CODE
+              .coupon-section.mt-4
+                label.form-label.small.fw-bold Coupon Code:
+                .input-group.input-group-sm
+                  input.form-control(type="text" placeholder="Enter code" id="couponCode")
+                  button.btn.btn-outline-secondary(type="button" onclick="applyCoupon()") Apply
+
+      else
+        // EMPTY CART
+        .empty-cart-section.text-center.py-5
+          i.fas.fa-shopping-cart.display-1.text-muted.mb-4.d-block
+          h4.fw-bold Your cart is empty
+          p.text-muted.mb-4 Start shopping and add some great books to your cart!
+          a.btn.btn-primary.btn-lg(href="/books") Browse Books
+
+block styles
+  style.
+    .cart-item {
+      transition: all 0.3s ease;
+    }
+    .cart-item:hover {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      margin: -1rem;
+      border-radius: 0.5rem;
+    }
+    .cart-summary {
+      border: 1px solid #e0e0e0;
+    }
+    .summary-item {
+      font-size: 0.95rem;
+    }
+
+block scripts
+  script.
+    async function applyCoupon() {
+      const code = document.getElementById('couponCode').value;
+      if (!code) return showToast('Please enter a coupon code', 'warning');
+      
+      try {
+        const data = await apiFetch('/api/v1/cart/apply-coupon', {
+          method: 'POST',
+          body: JSON.stringify({ coupon: code })
+        });
+
+        showToast('Coupon applied successfully!', 'success');
+        location.reload();
+      } catch (error) {
+        showToast(error.message, 'danger');
+      }
+    }
+

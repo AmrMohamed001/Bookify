@@ -11,6 +11,8 @@ const {
 // All routes require authentication
 router.use(protect);
 
+router.get('/count', controller.getCartCount);
+
 router
   .route('/')
   .get(controller.getCart)

@@ -1,0 +1,218 @@
+extends layout
+
+block content
+  .browse-container.py-4
+    .container-fluid.px-4
+      // HEADER
+      .row.mb-4
+        .col-md-8
+          h1.fw-bold Browse Books
+          p.text-muted Discover thousands of books to read
+        .col-md-4.text-end
+          button.btn.btn-outline-secondary(type="button" data-bs-toggle="modal" data-bs-target="#filterModal")
+            i.fas.fa-filter
+            |  Filters
+
+      .row
+        // SIDEBAR FILTERS (on larger screens)
+        .col-lg-3.d-none.d-lg-block
+          .filters-sidebar.bg-light.p-4.rounded
+            h5.fw-bold.mb-3 Filters
+
+            // Price Range
+            .filter-group.mb-4
+              h6.mb-3 Price Range
+              .price-inputs.d-flex.gap-2
+                input.form-control.form-control-sm(type="number" placeholder="Min" name="minPrice")
+                input.form-control.form-control-sm(type="number" placeholder="Max" name="maxPrice")
+
+            // Format
+            .filter-group.mb-4
+              h6.mb-3 Format
+              .form-check
+                input.form-check-input(type="checkbox" id="digital" name="format" value="digital")
+                label.form-check-label(for="digital") Digital
+              .form-check
+                input.form-check-input(type="checkbox" id="physical" name="format" value="physical")
+                label.form-check-label(for="physical") Physical
+
+            // Genre
+            .filter-group.mb-4
+              h6.mb-3 Genre
+              each genre in genres || ['Fiction', 'Mystery', 'Romance', 'Sci-Fi', 'Biography', 'Technology']
+                .form-check
+                  input.form-check-input(type="checkbox" name="genre" value=genre)
+                  label.form-check-label= genre
+
+            // Rating
+            .filter-group.mb-4
+              h6.mb-3 Rating
+              .form-check
+                input.form-check-input(type="checkbox" name="rating" value="4")
+                label.form-check-label 4+ Stars
+              .form-check
+                input.form-check-input(type="checkbox" name="rating" value="3")
+                label.form-check-label 3+ Stars
+
+            button.btn.btn-primary.w-100 Apply Filters
+            button.btn.btn-outline-secondary.w-100.mt-2 Clear All
+
+        // MAIN CONTENT
+        .col-lg-9
+          // SORT & VIEW OPTIONS
+          .row.mb-4.align-items-center
+            .col-md-6
+              .sort-options
+                label.me-2 Sort by:
+                select.form-select.form-select-sm.d-inline-block.w-auto(name="sort")
+                  option(value="newest") Newest
+                  option(value="popular") Most Popular
+                  option(value="price-low") Price: Low to High
+                  option(value="price-high") Price: High to Low
+                  option(value="rating") Highest Rated
+            .col-md-6.text-end
+              .view-options
+                button.btn.btn-sm.btn-outline-secondary.me-2(title="Grid view")
+                  i.fas.fa-th
+                button.btn.btn-sm.btn-outline-secondary.active(title="List view")
+                  i.fas.fa-list
+
+          // BOOKS GRID
+          .books-grid.row.g-4
+            each book in books || []
+              .col-lg-4.col-md-6.col-sm-12
+                .book-card.modern-card.h-100.d-flex.flex-column
+                  a.book-card-link(href=`/book/${book._id}` style="text-decoration: none; color: inherit;")
+                    .book-card-image.position-relative
+                      if book.coverImage && book.coverImage.url
+                        img.w-100(src=book.coverImage.url alt=book.title style="height: 280px; object-fit: cover;")
+                      else
+                        .d-flex.align-items-center.justify-content-center(style="height: 280px; background-color: #e5e7eb;")
+                          i.fas.fa-book(style="font-size: 60px; color: #999;")
+                      .book-card-overlay
+                        span.pill-btn.pill-btn-primary.btn-sm View Details
+                      
+                      // FORMAT BADGES
+                      .position-absolute.bottom-0.start-0.m-2.d-flex.gap-1
+                        if book.pricing && book.pricing.digital && book.pricing.digital.isAvailable
+                          span.badge-format.badge-digital
+                            i.fas.fa-tablet-alt.me-1
+                            | Digital
+                        if book.pricing && book.pricing.physical && book.pricing.physical.isAvailable
+                          span.badge-format.badge-physical
+                            i.fas.fa-book.me-1
+                            | Physical
+
+                  .book-card-body.p-3.flex-grow-1.d-flex.flex-column
+                    a.text-decoration-none(href=`/book/${book._id}`)
+                      h6.fw-bold.text-truncate(style="color: var(--text-color);")= book.title
+                    p.text-muted.small.text-truncate.mb-2
+                      if book.author && book.author.name
+                        | by #{book.author.name}
+                      else
+                        | by Unknown Author
+                    
+                    .rating.small.mb-2
+                      - const rating = book.stats ? Math.round(book.stats.averageRating || 0) : 0
+                      each i in [1,2,3,4,5]
+                        if i <= rating
+                          i.fas.fa-star(style="color: var(--primary-color);")
+                        else
+                          i.far.fa-star(style="color: var(--primary-color);")
+                      span.ms-2.text-muted (#{book.stats ? book.stats.reviewCount : 0})
+
+                    .book-card-footer.mt-auto
+                      .d-flex.justify-content-between.align-items-center
+                        span.fw-bold(style="color: var(--primary-color); font-size: 1.125rem;")
+                          if book.pricing && book.pricing.digital && book.pricing.digital.price
+                            = `$${book.pricing.digital.price}`
+                          else if book.pricing && book.pricing.physical && book.pricing.physical.price
+                            = `$${book.pricing.physical.price}`
+                        button.btn.btn-sm(type="button" onclick=`event.stopPropagation(); addToWishlist('${book._id}')` style="border: 1px solid var(--border-color); border-radius: 50%; width: 36px; height: 36px;")
+                          i.fas.fa-heart(style="color: var(--primary-color);")
+
+          // NO RESULTS
+          if (!books || books.length === 0)
+            .col-12.text-center.py-5
+              i.fas.fa-search.display-1.text-muted.mb-3.d-block
+              h5 No books found
+              p.text-muted Try adjusting your filters
+
+  // FILTER MODAL (for mobile)
+  #filterModal.modal.fade(tabindex="-1")
+    .modal-dialog.modal-fullscreen-sm-down
+      .modal-content
+        .modal-header
+          h5.modal-title Filters
+          button.btn-close(type="button" data-bs-dismiss="modal")
+        .modal-body
+          // Price Range
+          .filter-group.mb-4
+            h6.mb-3 Price Range
+            .price-inputs.d-flex.gap-2
+              input.form-control.form-control-sm(type="number" placeholder="Min" name="minPrice")
+              input.form-control.form-control-sm(type="number" placeholder="Max" name="maxPrice")
+
+          // Format
+          .filter-group.mb-4
+            h6.mb-3 Format
+            .form-check
+              input.form-check-input(type="checkbox" id="digitalMobile" name="format" value="digital")
+              label.form-check-label(for="digitalMobile") Digital
+            .form-check
+              input.form-check-input(type="checkbox" id="physicalMobile" name="format" value="physical")
+              label.form-check-label(for="physicalMobile") Physical
+
+          // Genre
+          .filter-group.mb-4
+            h6.mb-3 Genre
+            each genre in genres || ['Fiction', 'Mystery', 'Romance', 'Sci-Fi', 'Biography', 'Technology']
+              .form-check
+                input.form-check-input(type="checkbox" name="genre" value=genre)
+                label.form-check-label= genre
+
+        .modal-footer
+          button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Close
+          button.btn.btn-primary Apply Filters
+
+block styles
+  style.
+    .filters-sidebar {
+      position: sticky;
+      top: 80px;
+    }
+    .book-card {
+      transition: all 0.3s ease;
+      border: none;
+    }
+    .book-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important;
+    }
+    .book-card-image {
+      overflow: hidden;
+      background: #f0f0f0;
+    }
+    .book-card-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .book-card:hover .book-card-overlay {
+      opacity: 1;
+    }
+    .filter-group {
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .filter-group:last-child {
+      border-bottom: none;
+    }

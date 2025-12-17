@@ -13,6 +13,17 @@ exports.getCart = catchAsync(async (req, res, next) => {
   });
 });
 
+// @desc    Get cart item count
+// @route   GET /api/v1/cart/count
+// @access  Private (User)
+exports.getCartCount = catchAsync(async (req, res, next) => {
+  const cart = await cartService.getCart(req.user._id);
+  res.status(200).json({
+    status: 'success',
+    count: cart.cartItems.length,
+  });
+});
+
 // @desc    Add item to cart
 // @route   POST /api/v1/cart
 // @body    { bookId: "...", quantity: 1 }

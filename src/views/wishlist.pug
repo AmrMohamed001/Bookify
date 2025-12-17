@@ -1,0 +1,135 @@
+extends layout
+
+block content
+  .wishlist-container.py-4
+    .container
+
+      // WISHLIST HEADER BANNER
+      .wishlist-header
+        .row.align-items-center
+          .col-md-8
+            h1.fw-bold.mb-2 My Wishlist
+            if wishlistBooks && wishlistBooks.length > 0
+              p.item-count.mb-0
+                i.fas.fa-heart.me-2
+                = `${wishlistBooks.length} ${wishlistBooks.length === 1 ? 'book' : 'books'} saved`
+            else
+              p.item-count.mb-0 Start adding books you love
+          .col-md-4.text-end.d-none.d-md-block
+            if wishlistBooks && wishlistBooks.length > 0
+              button.btn.btn-light.btn-sm(type="button" onclick="addAllToCart()")
+                i.fas.fa-shopping-cart.me-2
+                | Add All to Cart
+
+      if wishlistBooks && wishlistBooks.length > 0
+        // SORTING
+        .d-flex.justify-content-between.align-items-center.mb-4
+          p.text-muted.mb-0 Showing #{wishlistBooks.length} books
+          .pill-tabs
+            a.pill-tab.active(href="/wishlist?sort=recent") Recent
+            a.pill-tab(href="/wishlist?sort=price") Price
+            a.pill-tab(href="/wishlist?sort=title") Title
+
+        // BOOK GRID
+        .row.g-4
+          each book in wishlistBooks
+            .col-lg-3.col-md-6.col-sm-12
+              .modern-card.h-100.d-flex.flex-column.position-relative
+                // BOOK COVER
+                .book-cover.position-relative(style="height: 280px; overflow: hidden;")
+                  if book.coverImage && book.coverImage.url
+                    img.w-100.h-100(src=book.coverImage.url alt=book.title style="object-fit: cover;")
+                  else
+                    .placeholder-image.d-flex.align-items-center.justify-content-center.h-100(style="background-color: #e5e7eb;")
+                      i.fas.fa-book(style="font-size: 60px; color: #999;")
+                  
+                  // REMOVE BUTTON
+                  button.btn.btn-sm.position-absolute.top-0.end-0.m-2(
+                    type="button"
+                    onclick=`removeFromWishlist('${book._id}')`
+                    style="background-color: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 36px; height: 36px;"
+                    title="Remove from wishlist"
+                  )
+                    i.fas.fa-heart(style="color: #ef4444;")
+                  
+                  // FORMAT BADGES
+                  .position-absolute.bottom-0.start-0.m-2.d-flex.gap-1
+                    if book.pricing && book.pricing.digital && book.pricing.digital.isAvailable !== false
+                      span.badge-format.badge-digital
+                        i.fas.fa-tablet-alt.me-1
+                        | Digital
+                    if book.pricing && book.pricing.physical && book.pricing.physical.isAvailable
+                      span.badge-format.badge-physical
+                        i.fas.fa-book.me-1
+                        | Physical
+
+                // BOOK INFO
+                .p-3.flex-grow-1.d-flex.flex-direction-column
+                  h6.fw-bold.mb-2.text-truncate(title=book.title)= book.title
+                  p.text-muted.small.mb-2
+                    if book.author && book.author.name
+                      | by #{book.author.name}
+                    else
+                      | by Unknown Author
+
+                  // RATING
+                  .rating.small.mb-2
+                    if book.stats
+                      - const rating = book.stats.averageRating ? Math.round(book.stats.averageRating) : 0
+                      each i in [1,2,3,4,5]
+                        if i <= rating
+                          i.fas.fa-star(style="color: var(--primary-color);")
+                        else
+                          i.far.fa-star(style="color: var(--primary-color);")
+                      span.ms-2.text-muted= `(${book.stats.reviewCount || 0})`
+
+                  // PRICE
+                  .price.mt-auto.mb-2
+                    if book.pricing && book.pricing.digital && book.pricing.digital.price
+                      span.fw-bold(style="font-size: 1.25rem; color: var(--primary-color);")= `$${book.pricing.digital.price}`
+                    else if book.pricing && book.pricing.physical && book.pricing.physical.price
+                      span.fw-bold(style="font-size: 1.25rem; color: var(--primary-color);")= `$${book.pricing.physical.price}`
+
+                // FULL WIDTH ADD TO CART BUTTON
+                button.btn-add-cart-full(type="button" onclick=`addToCart('${book._id}', 'digital', 1)`)
+                  i.fas.fa-shopping-cart
+                  | Add to Cart
+
+      else
+        // EMPTY WISHLIST
+        .empty-wishlist.text-center.py-5
+          .mb-4
+            i.fas.fa-heart(style="font-size: 80px; color: var(--primary-color); opacity: 0.3;")
+          h4.fw-bold.mb-2 Your wishlist is empty
+          p.text-muted.mb-4 Start adding books to your wishlist to keep track of what you want to read
+          a.pill-btn.pill-btn-primary.btn-lg(href="/books")
+            i.fas.fa-search.me-2
+            | Browse Books
+
+block styles
+  style.
+    .book-cover img {
+      transition: transform 0.3s ease;
+    }
+    .modern-card:hover .book-cover img {
+      transform: scale(1.05);
+    }
+    .flex-direction-column {
+      flex-direction: column;
+    }
+
+block scripts
+  script.
+    async function addAllToCart() {
+      const books = !{JSON.stringify(wishlistBooks.map(b => b._id))};
+      
+      for (const bookId of books) {
+        try {
+          await addToCart(bookId, 'digital', 1);
+        } catch (err) {
+          console.error('Failed to add book:', bookId);
+        }
+      }
+      
+      showToast('All books added to cart!', 'success');
+    }

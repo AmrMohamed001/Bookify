@@ -1,0 +1,130 @@
+extends layout
+
+block content
+  .settings-container.py-4
+    .container(style="max-width: 800px;")
+
+      h1.fw-bold.mb-2 Settings
+      p.text-muted.mb-4 Manage your account security and preferences
+
+      // PILL TAB NAVIGATION
+      .pill-tabs.mb-4
+        a.pill-tab(href="/profile")
+          i.fas.fa-user.me-2
+          | Profile
+        a.pill-tab(href="/addresses")
+          i.fas.fa-map-marker-alt.me-2
+          | Addresses
+        a.pill-tab(href="/orders")
+          i.fas.fa-receipt.me-2
+          | Orders
+        a.pill-tab.active(href="/settings")
+          i.fas.fa-cog.me-2
+          | Security
+
+      // CHANGE PASSWORD
+      .modern-card.p-4.mb-4
+        h5.fw-bold.mb-4
+          i.fas.fa-lock.me-2
+          | Change Password
+
+        form#passwordForm
+          .row.g-3
+            .col-12
+              label.form-label.fw-bold Current Password
+              input.form-control(
+                type="password"
+                name="currentPassword"
+                required
+              )
+
+            .col-md-6
+              label.form-label.fw-bold New Password
+              input.form-control(
+                type="password"
+                name="newPassword"
+                required
+                minlength="8"
+              )
+
+            .col-md-6
+              label.form-label.fw-bold Confirm New Password
+              input.form-control(
+                type="password"
+                name="confirmPassword"
+                required
+              )
+
+          .mt-4
+            button.pill-btn.pill-btn-primary(type="submit")
+              i.fas.fa-save.me-2
+              | Update Password
+
+      // NOTIFICATIONS
+      .modern-card.p-4.mb-4
+        h5.fw-bold.mb-4
+          i.fas.fa-bell.me-2
+          | Notifications
+
+        .form-check.form-switch.mb-3
+          input.form-check-input(type="checkbox" id="emailNotifications" checked)
+          label.form-check-label(for="emailNotifications") Email notifications for orders
+
+        .form-check.form-switch.mb-3
+          input.form-check-input(type="checkbox" id="promoEmails")
+          label.form-check-label(for="promoEmails") Promotional emails
+
+        .form-check.form-switch
+          input.form-check-input(type="checkbox" id="newBooks" checked)
+          label.form-check-label(for="newBooks") New book releases
+
+      // DANGER ZONE
+      .modern-card.p-4(style="border-color: #fee2e2;")
+        h5.fw-bold.mb-4(style="color: #991b1b;")
+          i.fas.fa-exclamation-triangle.me-2
+          | Danger Zone
+
+        p.text-muted.mb-3 Once you delete your account, there is no going back.
+
+        button.btn(type="button" style="background-color: #fee2e2; color: #991b1b;" onclick="confirmDeleteAccount()")
+          i.fas.fa-trash-alt.me-2
+          | Delete Account
+
+block scripts
+  script.
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      const newPassword = formData.get('newPassword');
+      const confirmPassword = formData.get('confirmPassword');
+      
+      if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'danger');
+        return;
+      }
+      
+      try {
+        await apiFetch('/api/v1/auth/change-password', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            currentPassword: formData.get('currentPassword'),
+            newPassword: newPassword,
+          })
+        });
+        
+        showToast('Password updated successfully!', 'success');
+        form.reset();
+      } catch (error) {
+        showToast(error.message, 'danger');
+      }
+    });
+
+    function confirmDeleteAccount() {
+      if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        // Would call delete account API
+        showToast('Account deletion is disabled in this demo', 'warning');
+      }
+    }
